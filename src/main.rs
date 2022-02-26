@@ -6,13 +6,13 @@ fn main() {
         .add_system(bevy::input::system::exit_on_esc_system)
         .add_startup_system(init)
         .add_startup_system(spawn_player)
+        .add_startup_system(spawn_ground)
         .add_startup_system(set_window_resolution)
         .run()
 }
 
 fn init(mut commands: Commands) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-
 }
 
 fn set_window_resolution(mut windows: ResMut<Windows>) {
@@ -29,6 +29,18 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             custom_size: Some(Vec2::new(75.0, 50.0)),
             ..Default::default()
         },
+        ..Default::default()
+    });
+}
+
+fn spawn_ground(mut commands: Commands) {
+    commands.spawn_bundle(SpriteBundle {
+        sprite: Sprite {
+            custom_size: Some(Vec2::new(2000.0, 50.0)),
+            color: Color::rgb(0.76, 0.55, 0.10),
+            ..Default::default()
+        },
+        transform: Transform::from_translation(Vec3::new(0.0, -50.0, 0.0)),
         ..Default::default()
     });
 }
