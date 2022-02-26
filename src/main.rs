@@ -1,5 +1,8 @@
 use bevy::prelude::*;
 
+#[derive(Component)]
+struct Player;
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
@@ -9,6 +12,7 @@ fn main() {
         .add_startup_system(spawn_player)
         .add_startup_system(spawn_ground)
         .add_startup_system(set_window_resolution)
+        .add_system(player_move)
         .run()
 }
 
@@ -32,7 +36,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
         transform: Transform::from_translation(Vec3::new(0.0, -350.0, 2.0)),
         ..Default::default()
-    });
+    }).insert(Player);
 }
 
 fn spawn_ground(mut commands: Commands) {
@@ -55,4 +59,22 @@ fn background(mut commands: Commands, asset_server: Res<AssetServer>) {
         // transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
         ..Default::default()
     });
+}
+
+fn player_move(mut player: Query<&mut Transform, With<Player>>, keys: Res<Input<KeyCode>>) {
+    let mut player_transform = player.single_mut();
+
+    if keys.pressed(KeyCode::W) {
+        player_transform.translation.y += 1.0;
+    }
+    if keys.pressed(KeyCode::S) {
+        player_transform.translation.y -= 1.0;
+    }
+    if keys.pressed(KeyCode::A) {
+        player_transform.translation.x -= 1.0;
+    }
+    if keys.pressed(KeyCode::D) {
+        player_transform.translation.x += 1.0;
+    }
+
 }
