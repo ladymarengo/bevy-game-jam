@@ -16,3 +16,7 @@ opt-level = 3
 [profile.release]
 strip = "debuginfo"
 lto = "fat"
+
+[[bin]]
+name = "enemy"
+path = "src/enemy.rs"
