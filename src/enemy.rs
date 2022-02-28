@@ -67,7 +67,7 @@ q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>) {
 		*direction = Direction::Left;
 	}
 
-	// get cursor coordinates
+	// get cursor coordinates. Will change later to the main character coordinates
 
 	let (camera, camera_transform) = q_camera.single();
     let wnd = wnds.get(camera.window).unwrap();
@@ -80,10 +80,12 @@ q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>) {
         let world_pos: Vec2 = world_pos.truncate();
 
         // eprintln!("World coords: {}/{}", world_pos.x, world_pos.y);
-		match (world_pos.x - enemy.translation.x) as i32 {
-			-200..=0 => *direction = Direction::Left,
-			1..=200 => *direction = Direction::Right,
-			_ => (),
+		if world_pos.y - enemy.translation.y > -200.0 && world_pos.y - enemy.translation.y < 200.0 {
+			match (world_pos.x - enemy.translation.x) as i32 {
+				-200..=0 => *direction = Direction::Left,
+				1..=200 => *direction = Direction::Right,
+				_ => (),
+			}
 		}
     }
 }
