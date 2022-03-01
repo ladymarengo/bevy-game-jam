@@ -10,6 +10,16 @@ jobs:
     container: samoylovfp/trunk:1.59.0_0.14.0
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - name: "Build the dist"
         run: |
           trunk build --release --public-url jam/$GITHUB_REF_NAME
