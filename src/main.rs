@@ -1,30 +1,37 @@
 use bevy::prelude::*;
 
+mod tilemap;
+
 #[derive(Component)]
 struct Player;
+
+const PIXEL_MULTIPLIER: f32 = 4.0;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_system(bevy::input::system::exit_on_esc_system)
-        .add_startup_system(background)
         .add_startup_system(init)
         .add_startup_system(spawn_player)
-        .add_startup_system(spawn_ground)
         .add_startup_system(set_window_resolution)
+        .add_startup_system(tilemap::load_map)
         .add_system(player_move)
         .run()
 }
 
 fn init(mut commands: Commands) {
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    let mut camera_bundle = OrthographicCameraBundle::new_2d();
+    camera_bundle.orthographic_projection.scale = 1.0 / PIXEL_MULTIPLIER;
+    camera_bundle.transform.translation.x = tilemap::TILE_SIZE as f32 * 8.0;
+    camera_bundle.transform.translation.y = tilemap::TILE_SIZE as f32 * 6.0;
+    commands.spawn_bundle(camera_bundle);
 }
 
 fn set_window_resolution(mut windows: ResMut<Windows>) {
     windows
         .get_primary_mut()
         .unwrap()
-        .set_resolution(1024.0, 860.0);
+        .set_resolution(256.0 * PIXEL_MULTIPLIER, 215.0 * PIXEL_MULTIPLIER);
 }
 
 fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -34,31 +41,9 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             custom_size: Some(Vec2::new(75.0, 50.0)),
             ..Default::default()
         },
-        transform: Transform::from_translation(Vec3::new(0.0, -350.0, 2.0)),
+        transform: Transform::from_translation(Vec3::new(0.0, 0.0, 2.0)),
         ..Default::default()
     }).insert(Player);
-}
-
-fn spawn_ground(mut commands: Commands) {
-    commands.spawn_bundle(SpriteBundle {
-        sprite: Sprite {
-            custom_size: Some(Vec2::new(2000.0, 100.0)),
-            color: Color::rgb(0.76, 0.55, 0.10),
-            ..Default::default()
-        },
-        transform: Transform::from_translation(Vec3::new(0.0, -400.0, 1.0)),
-        ..Default::default()
-    });
-}
-
-
-fn background(mut commands: Commands, asset_server: Res<AssetServer>) {
-    // FIXME: Needs to be synched with the camera
-    commands.spawn_bundle(SpriteBundle {
-        texture: asset_server.load("bg.png"),
-        // transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
-        ..Default::default()
-    });
 }
 
 fn player_move(mut player: Query<&mut Transform, With<Player>>, keys: Res<Input<KeyCode>>) {
