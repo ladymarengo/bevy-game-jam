@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.6.1"
-tiled = "0.9.5"
+tiled = { version = "0.9.5", default_features = false }
 
 
 [profile.dev.package."*"]
