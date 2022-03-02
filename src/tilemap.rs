@@ -135,13 +135,14 @@ fn create_tile_sprite(
     });
     entity.insert(Parent(tilemap_container));
     if has_collision {
-        entity.insert_bundle(RigidBodyBundle {
-            position: position.into(),
-            body_type: RigidBodyType::Static.into(),
-            ..Default::default()
-        });
+        // entity.insert_bundle(RigidBodyBundle {
+        //     position: position.into(),
+        //     body_type: RigidBodyType::Static.into(),
+        //     ..Default::default()
+        // });
         entity.insert_bundle(ColliderBundle {
             shape: ColliderShape::cuboid(TILE_SIZE as f32, TILE_SIZE as f32).into(),
+            position: position.into(),
             ..Default::default()
         });
     }
