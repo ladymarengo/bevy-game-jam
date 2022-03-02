@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 
 mod tilemap;
 
@@ -10,6 +11,7 @@ const PIXEL_MULTIPLIER: f32 = 4.0;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(bevy::input::system::exit_on_esc_system)
         .add_startup_system(init)
         .add_startup_system(spawn_player)
