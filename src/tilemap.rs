@@ -1,11 +1,9 @@
 use bevy::prelude::*;
-use std::path::Path;
 
 pub const TILE_SIZE: usize = 16;
 
-// TODO: get assets path from asset system, or even use asset system for loading
-const MAP_PATH: &str = "assets/terrain.tmx";
 const TILESET_ASSET: &str = "terrain.png";
+const TILEMAP_TMX: &[u8] = include_bytes!("../assets/terrain.tmx");
 
 const COLLISION_LAYER_NAME: &str = "collision";
 
@@ -50,7 +48,7 @@ pub fn load_map(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    let map = tiled::parse_file(Path::new(MAP_PATH)).unwrap();
+    let map = tiled::parse(TILEMAP_TMX).unwrap();
     let texture = asset_server.load(TILESET_ASSET);
     let texture_atlas = TextureAtlas::from_grid(
         texture,
