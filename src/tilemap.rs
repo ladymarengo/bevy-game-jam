@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use std::path::Path;
 
+use crate::{PLAYER_COLLIDER_GROUP, TERRAIN_COLLISION_GROUP, METERS_PER_PIXEL};
+
 pub const TILE_SIZE: usize = 16;
 
 // TODO: get assets path from asset system, or even use asset system for loading
@@ -124,25 +126,29 @@ fn create_tile_sprite(
         (col * TILE_SIZE) as f32,
         ((height - row - 1) * TILE_SIZE) as f32,
     );
-    let mut entity = commands.spawn_bundle(SpriteSheetBundle {
+    let mut entity = commands.spawn();
+    entity.insert_bundle(SpriteSheetBundle {
         texture_atlas: texture_atlas_handle.clone(),
         sprite: TextureAtlasSprite {
             index: (tile_id as usize) - 1,
             ..Default::default()
         },
-        transform: Transform::from_xyz(position.x, position.y, order as f32),
+        transform: Transform::from_xyz(position.x, position.y, order as f32 / 100.0 - 0.1),
         ..Default::default()
     });
-    entity.insert(Parent(tilemap_container));
+    // entity.insert(Parent(tilemap_container));
     if has_collision {
-        // entity.insert_bundle(RigidBodyBundle {
-        //     position: position.into(),
-        //     body_type: RigidBodyType::Static.into(),
-        //     ..Default::default()
-        // });
         entity.insert_bundle(ColliderBundle {
-            shape: ColliderShape::cuboid(TILE_SIZE as f32, TILE_SIZE as f32).into(),
-            position: position.into(),
+            shape: ColliderShape::cuboid(TILE_SIZE as f32 / 2.0 * METERS_PER_PIXEL, TILE_SIZE as f32 / 2.0 * METERS_PER_PIXEL).into(),
+            flags: ColliderFlags {
+                collision_groups: InteractionGroups::new(
+                    TERRAIN_COLLISION_GROUP,
+                    PLAYER_COLLIDER_GROUP,
+                ),
+                ..Default::default()
+            }
+            .into(),
+            position: (position * METERS_PER_PIXEL).into(),
             ..Default::default()
         });
     }
