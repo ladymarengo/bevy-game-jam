@@ -17,6 +17,7 @@ const PIXEL_MULTIPLIER: f32 = 4.0;
 
 fn main() {
     App::new()
+        .init_resource::<enemy::Animations>()
         .add_plugins(DefaultPlugins)
         .add_plugin(PhysicsPlugin::default())
         .add_plugin(AnimationPlugin::default())
@@ -36,7 +37,7 @@ fn main() {
 
 fn init(mut commands: Commands) {
     let mut camera_bundle = OrthographicCameraBundle::new_2d();
-    camera_bundle.orthographic_projection.scale = 4.0 / PIXEL_MULTIPLIER;
+    camera_bundle.orthographic_projection.scale = 1.0 / PIXEL_MULTIPLIER;
     camera_bundle.transform.translation.x = tilemap::TILE_SIZE as f32 * 8.0;
     camera_bundle.transform.translation.y = tilemap::TILE_SIZE as f32 * 6.0;
     commands.spawn_bundle(camera_bundle).insert(enemy::MainCamera);
@@ -55,8 +56,8 @@ fn spawn_player(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut animations: ResMut<Assets<SpriteSheetAnimation>>
 ) {
-    let texture = asset_server.load("main_character.png");
-    let texture_atlas = TextureAtlas::from_grid(texture, Vec2::new(32.0, 16.0), 4, 1);
+    let texture = asset_server.load("ferris-Sheet.png");
+    let texture_atlas = TextureAtlas::from_grid(texture, Vec2::new(32.0, 32.0), 4, 1);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
     let animation_handle = animations.add(SpriteSheetAnimation::from_range(
