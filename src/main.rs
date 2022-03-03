@@ -32,6 +32,7 @@ fn main() {
         .add_system(check_collisions)
         .add_startup_system(enemy::spawn_enemy)
         .add_system(enemy::enemy_move)
+        .add_system(cameraman)
         .run()
 }
 
@@ -39,7 +40,7 @@ fn init(mut commands: Commands) {
     let mut camera_bundle = OrthographicCameraBundle::new_2d();
     camera_bundle.orthographic_projection.scale = 1.0 / PIXEL_MULTIPLIER;
     camera_bundle.transform.translation.x = tilemap::TILE_SIZE as f32 * 8.0;
-    camera_bundle.transform.translation.y = tilemap::TILE_SIZE as f32 * 6.0;
+    camera_bundle.transform.translation.y = tilemap::TILE_SIZE as f32 * 11.0;
     commands.spawn_bundle(camera_bundle);
 }
 
@@ -145,4 +146,33 @@ fn check_collisions(
             CollisionEvent::Stopped(_d1, _d2) => (),
         }
     }
+}
+
+
+#[allow(clippy::type_complexity)]
+fn cameraman(mut position_queries: QuerySet<(
+    QueryState<&mut Transform, With<Camera>>,
+    QueryState<&Transform, With<Player>>,
+)>,
+) {
+    let player_pos = {
+        match position_queries.q1().get_single() {
+            Ok(p) => p.translation,
+            Err(e) => {
+                info!("Querying player errored with {:?}", e);
+                return;
+            }
+        }
+    };
+
+    match position_queries.q0().get_single_mut() {
+        Ok(mut c) => {
+            c.translation.x = player_pos.x;
+            // c.translation.y = player_pos.y;
+        }
+        Err(e) => {
+            info!("Querying camera errored with {:?}", e);
+        }
+    }
+
 }
