@@ -1,6 +1,6 @@
+use benimator::*;
 use bevy::prelude::*;
 use heron::*;
-use benimator::*;
 use std::time::Duration;
 
 mod tilemap;
@@ -30,7 +30,7 @@ fn main() {
         .add_system(player_move)
         .add_system(check_collisions)
         .add_startup_system(enemy::spawn_enemy)
-		.add_system(enemy::enemy_move)
+        .add_system(enemy::enemy_move)
         .run()
 }
 
@@ -39,7 +39,7 @@ fn init(mut commands: Commands) {
     camera_bundle.orthographic_projection.scale = 4.0 / PIXEL_MULTIPLIER;
     camera_bundle.transform.translation.x = tilemap::TILE_SIZE as f32 * 8.0;
     camera_bundle.transform.translation.y = tilemap::TILE_SIZE as f32 * 6.0;
-    commands.spawn_bundle(camera_bundle).insert(enemy::MainCamera);
+    commands.spawn_bundle(camera_bundle);
 }
 
 fn set_window_resolution(mut windows: ResMut<Windows>) {
@@ -53,7 +53,7 @@ fn spawn_player(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    mut animations: ResMut<Assets<SpriteSheetAnimation>>
+    mut animations: ResMut<Assets<SpriteSheetAnimation>>,
 ) {
     let texture = asset_server.load("main_character.png");
     let texture_atlas = TextureAtlas::from_grid(texture, Vec2::new(32.0, 16.0), 4, 1);
@@ -83,20 +83,26 @@ fn spawn_player(
         .insert(RotationConstraints::lock())
         .insert(PhysicMaterial {
             restitution: 0.2,
-            ..Default::default()})
+            ..Default::default()
+        })
         .insert(Player)
         .insert(animation_handle)
         .insert(Play);
 }
 
-fn player_move(mut commands: Commands, mut player: Query<(Entity, &mut Velocity), With<Player>>, keys: Res<Input<KeyCode>>, mut jump: ResMut<Jump>) {
+fn player_move(
+    mut commands: Commands,
+    mut player: Query<(Entity, &mut Velocity), With<Player>>,
+    keys: Res<Input<KeyCode>>,
+    mut jump: ResMut<Jump>,
+) {
     let (id, mut player) = player.single_mut();
-	
+
     commands.entity(id).remove::<Play>();
 
     if keys.pressed(KeyCode::W) && !jump.0 {
         player.linear[1] = 800.0;
-		jump.0 = true;
+        jump.0 = true;
     }
     if keys.pressed(KeyCode::A) {
         player.linear[0] = -200.0;
@@ -115,20 +121,27 @@ fn player_move(mut commands: Commands, mut player: Query<(Entity, &mut Velocity)
     }
 }
 
-fn check_collisions(mut events: EventReader<CollisionEvent>, mut jump: ResMut<Jump>,  player: Query<Entity, With<Player>>, enemy: Query<Entity, With<enemy::Enemy>>) {
+fn check_collisions(
+    mut events: EventReader<CollisionEvent>,
+    mut jump: ResMut<Jump>,
+    player: Query<Entity, With<Player>>,
+    enemy: Query<Entity, With<enemy::Enemy>>,
+) {
     let id = player.single();
     let enemy = enemy.single();
     for event in events.iter() {
         match event {
             CollisionEvent::Started(d1, d2) => {
                 if d1.rigid_body_entity() == id || d2.rigid_body_entity() == id {
-				    jump.0 = false;
+                    jump.0 = false;
                 }
-                if (d1.rigid_body_entity() == id && d2.rigid_body_entity() == enemy) || (d1.rigid_body_entity() == enemy && d2.rigid_body_entity() == id) {
-				    println!("Oh no!");
+                if (d1.rigid_body_entity() == id && d2.rigid_body_entity() == enemy)
+                    || (d1.rigid_body_entity() == enemy && d2.rigid_body_entity() == id)
+                {
+                    println!("Oh no!");
                 }
             }
-            CollisionEvent::Stopped(_d1, _d2) => ()
+            CollisionEvent::Stopped(_d1, _d2) => (),
         }
     }
 }
