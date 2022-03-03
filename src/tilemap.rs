@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use heron::*;
-use std::path::Path;
 
 pub const TILE_SIZE: usize = 16;
 
