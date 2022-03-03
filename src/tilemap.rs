@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
+use heron::*;
 use std::path::Path;
 
 pub const TILE_SIZE: usize = 16;
@@ -140,10 +140,14 @@ fn create_tile_sprite(
         //     body_type: RigidBodyType::Static.into(),
         //     ..Default::default()
         // });
-        entity.insert_bundle(ColliderBundle {
-            shape: ColliderShape::cuboid(TILE_SIZE as f32, TILE_SIZE as f32).into(),
-            position: position.into(),
-            ..Default::default()
+        // entity.insert_bundle(ColliderBundle {
+        //     shape: ColliderShape::cuboid(TILE_SIZE as f32, TILE_SIZE as f32).into(),
+        //     position: position.into(),
+        //     ..Default::default()
+        entity.insert(RigidBody::Static);
+        entity.insert(CollisionShape::Cuboid {
+            half_extends: (Vec3::new(TILE_SIZE as f32 / 2.0, TILE_SIZE as f32 / 2.0, 0.0)),
+            border_radius: None,
         });
     }
 }

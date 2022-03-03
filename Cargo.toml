@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 bevy = "0.6.1"
 tiled = { version = "0.9.5", default_features = false }
-bevy_rapier2d = "0.12.1"
+heron = { version = "2.0.1", default-features = false, features = ["2d"] }
 
 
 [profile.dev.package."*"]

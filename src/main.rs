@@ -1,34 +1,38 @@
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
+use heron::*;
 
 mod tilemap;
 
 #[derive(Component)]
 struct Player;
 
+#[derive(Default)]
+struct Jump(bool);
+
 const PIXEL_MULTIPLIER: f32 = 4.0;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugin(PhysicsPlugin::default())
         .add_system(bevy::input::system::exit_on_esc_system)
+        .insert_resource(Gravity::from(Vec2::new(0.0, -2000.0)))
+        .insert_resource(Jump(false))
         .add_startup_system(init)
         .add_startup_system(spawn_player)
         .add_startup_system(set_window_resolution)
         .add_startup_system(tilemap::load_map)
         .add_system(player_move)
-        .add_system(copy_physics_coordinates)
+        .add_system(stop_jump)
         .run()
 }
 
-fn init(mut commands: Commands, mut rapier_config: ResMut<RapierConfiguration>) {
+fn init(mut commands: Commands) {
     let mut camera_bundle = OrthographicCameraBundle::new_2d();
     camera_bundle.orthographic_projection.scale = 4.0 / PIXEL_MULTIPLIER;
     camera_bundle.transform.translation.x = tilemap::TILE_SIZE as f32 * 8.0;
     camera_bundle.transform.translation.y = tilemap::TILE_SIZE as f32 * 6.0;
     commands.spawn_bundle(camera_bundle);
-    rapier_config.gravity = Vec2::new(0.0, -5000.0).into();
 }
 
 fn set_window_resolution(mut windows: ResMut<Windows>) {
@@ -45,68 +49,46 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             custom_size: Some(Vec2::new(75.0, 50.0)),
             ..Default::default()
         },
-        transform: Transform::from_translation(Vec3::new(150.0, 130.0, 2.0)),
+        transform: Transform::from_translation(Vec3::new(150.0, 230.0, 2.0)),
         ..Default::default()
-    }).insert(Player)
-    .insert_bundle(RigidBodyBundle {
-        // FIXME: center or corner?
-        position: Vec2::new(150.0, 230.0).into(),
-        mass_properties: RigidBodyMassPropsFlags::ROTATION_LOCKED.into(),
-        damping: RigidBodyDampingComponent(RigidBodyDamping {
-            linear_damping: 0.8,
-            angular_damping: 1.0,
-        }),
-        ..Default::default()
+    }).insert(RigidBody::Dynamic)
+    .insert(CollisionShape::Cuboid {
+        half_extends: Vec3::new(75.0 / 2.0, 50.0 / 2.0, 0.0),
+        border_radius: None,
     })
-    .insert_bundle(ColliderBundle {
-        shape: ColliderShapeComponent( ColliderShape::cuboid(
-            75.0,
-            50.0,
-        )),
-        material: ColliderMaterialComponent( ColliderMaterial {
-            restitution: 0.0,
-            ..Default::default()
-        }),
-        // flags: ColliderFlags {
-        //     collision_groups: InteractionGroups::new(
-        //         PLAYER_COLLIDER_GROUP,
-        //         u32::MAX,
-        //     ),
-        //     ..Default::default()
-        // },
-        ..Default::default()
-    })
-    .insert(ColliderPositionSync::Discrete);
+    .insert(Velocity::from(Vec3::new(0.0, 0.0, 0.0)))
+    .insert(RotationConstraints::lock())
+    .insert(PhysicMaterial {
+        restitution: 0.2,
+        ..Default::default()})
+    .insert(Player);
 }
 
-fn copy_physics_coordinates(mut positions: Query<(&RigidBodyPositionComponent, &mut Transform)>)
-{
-    for (phys_pos, mut bevy_pos) in positions.iter_mut() {
-        bevy_pos.translation.x = phys_pos.0.position.translation.x;
-        bevy_pos.translation.y = phys_pos.0.position.translation.y;
-    }
-}
-
-fn player_move(mut player: Query<&mut RigidBodyForcesComponent, With<Player>>, keys: Res<Input<KeyCode>>) {
-    let mut player_forces = player.single_mut();
-
-    if keys.pressed(KeyCode::W) {
-        player_forces.force = Vec2::new(0.0, 500000000.0).into();
+fn player_move(mut player: Query<&mut Velocity, With<Player>>, keys: Res<Input<KeyCode>>, mut jump: ResMut<Jump>) {
+    let mut player = player.single_mut();
+	
+    if keys.pressed(KeyCode::W) && !jump.0 {
+        player.linear[1] = 800.0;
+		jump.0 = true;
     }
     if keys.pressed(KeyCode::A) {
-        player_forces.force = Vec2::new(-2e8, 0.0).into();
+        player.linear[0] = -200.0;
     }
     if keys.pressed(KeyCode::D) {
-        player_forces.force = Vec2::new(2e8, 0.0).into();
+        player.linear[0] = 200.0;
     }
-    // if keys.pressed(KeyCode::S) {
-    //     player_forces.translation.y -= 1.0;
-    // }
-    // if keys.pressed(KeyCode::A) {
-    //     player_forces.translation.x -= 1.0;
-    // }
-    // if keys.pressed(KeyCode::D) {
-    //     player_forces.translation.x += 1.0;
-    // }
+    if keys.pressed(KeyCode::S) {
+        player.linear[1] = -500.0;
+    }
+}
 
+fn stop_jump(mut events: EventReader<CollisionEvent>, mut jump: ResMut<Jump>) {
+    for event in events.iter() {
+        match event {
+            CollisionEvent::Started(_d1, _d2) => {
+				jump.0 = false;
+            }
+            CollisionEvent::Stopped(_d1, _d2) => ()
+        }
+    }
 }
