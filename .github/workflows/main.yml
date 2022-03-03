@@ -1,0 +1,40 @@
+name: CI
+
+on: 
+  push: {}
+  workflow_dispatch: {}
+
+jobs:
+  commit:
+    runs-on: ubuntu-latest
+    container: samoylovfp/trunk:1.59.0_0.14.0
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: "Build the dist"
+        run: |
+          trunk build --release --public-url jam/$GITHUB_REF_NAME
+
+      - name: "Commit and push to results"
+        run: |
+          git config --global user.email "no-email"
+          git config --global user.name "CI"
+          git config --global credential.helper cache
+
+          git clone  https://${{secrets.COMMIT_PAT}}@github.com/ladymarengo/jam
+          cd jam
+          rm $GITHUB_REF_NAME -r || true
+          cp -r ../dist $GITHUB_REF_NAME
+          git add $GITHUB_REF_NAME
+          git commit -m "Build $GITHUB_SHA" || true
+          git push
+          

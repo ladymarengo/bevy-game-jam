@@ -7,6 +7,9 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.6.1"
+tiled = { version = "0.9.5", default_features = false }
+heron = { version = "2.0.1", default-features = false, features = ["2d"] }
+benimator = "2.1.0"
 
 
 [profile.dev.package."*"]
