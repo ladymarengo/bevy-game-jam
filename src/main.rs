@@ -42,26 +42,68 @@ fn set_window_resolution(mut windows: ResMut<Windows>) {
         .set_resolution(256.0 * PIXEL_MULTIPLIER, 215.0 * PIXEL_MULTIPLIER);
 }
 
-fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn_bundle(SpriteBundle {
-        texture: asset_server.load("f.png"),
-        sprite: Sprite {
-            custom_size: Some(Vec2::new(75.0, 50.0)),
+// fn spawn_player(
+//     mut commands: Commands,
+//     asset_server: Res<AssetServer>,
+//     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+// ) {
+//     let texture = asset_server.load("main_character.png");
+//     let texture_atlas = TextureAtlas::from_grid(texture, Vec2::new(32.0, 16.0), 4, 1);
+//     let texture_atlas_handle = texture_atlases.add(texture_atlas);
+//     commands
+//         .spawn_bundle(SpriteSheetBundle {
+//             texture_atlas: texture_atlas_handle.clone(),
+//             sprite: TextureAtlasSprite {
+//                 index: 0,
+//                 ..Default::default()
+//             },
+//             transform: Transform::from_translation(Vec3::new(0.0, 0.0, 2.0)),
+//             ..Default::default()
+//         },
+//         transform: Transform::from_translation(Vec3::new(150.0, 230.0, 2.0)),
+//         ..Default::default()
+//     }).insert(RigidBody::Dynamic)
+//     .insert(CollisionShape::Cuboid {
+//         half_extends: Vec3::new(75.0 / 2.0, 50.0 / 2.0, 0.0),
+//         border_radius: None,
+//     })
+//     .insert(Velocity::from(Vec3::new(0.0, 0.0, 0.0)))
+//     .insert(RotationConstraints::lock())
+//     .insert(PhysicMaterial {
+//         restitution: 0.2,
+//         ..Default::default()})
+//     .insert(Player);
+// }
+
+fn spawn_player(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
+    let texture = asset_server.load("main_character.png");
+    let texture_atlas = TextureAtlas::from_grid(texture, Vec2::new(32.0, 16.0), 4, 1);
+    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+    commands
+        .spawn_bundle(SpriteSheetBundle {
+            texture_atlas: texture_atlas_handle.clone(),
+            sprite: TextureAtlasSprite {
+                index: 0,
+                ..Default::default()
+            },
+            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 2.0)),
             ..Default::default()
-        },
-        transform: Transform::from_translation(Vec3::new(150.0, 230.0, 2.0)),
-        ..Default::default()
-    }).insert(RigidBody::Dynamic)
-    .insert(CollisionShape::Cuboid {
-        half_extends: Vec3::new(75.0 / 2.0, 50.0 / 2.0, 0.0),
-        border_radius: None,
-    })
-    .insert(Velocity::from(Vec3::new(0.0, 0.0, 0.0)))
-    .insert(RotationConstraints::lock())
-    .insert(PhysicMaterial {
-        restitution: 0.2,
-        ..Default::default()})
-    .insert(Player);
+        })
+        .insert(RigidBody::Dynamic)
+        .insert(CollisionShape::Cuboid {
+            half_extends: Vec3::new(75.0 / 2.0, 50.0 / 2.0, 0.0),
+            border_radius: None,
+        })
+        .insert(Velocity::from(Vec3::new(0.0, 0.0, 0.0)))
+        .insert(RotationConstraints::lock())
+        .insert(PhysicMaterial {
+            restitution: 0.2,
+            ..Default::default()})
+        .insert(Player);
 }
 
 fn player_move(mut player: Query<&mut Velocity, With<Player>>, keys: Res<Input<KeyCode>>, mut jump: ResMut<Jump>) {
