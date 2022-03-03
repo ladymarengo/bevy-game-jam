@@ -20,6 +20,8 @@ opt-level = 3
 strip = "debuginfo"
 lto = "fat"
 
+
+
 [[bin]]
-name = "enemy"
-path = "src/enemy.rs"
+name = "main"
+path = "src/main.rs"

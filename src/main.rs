@@ -5,8 +5,10 @@ use std::time::Duration;
 
 mod tilemap;
 
+mod enemy;
+
 #[derive(Component)]
-struct Player;
+pub struct Player;
 
 #[derive(Default)]
 struct Jump(bool);
@@ -26,7 +28,9 @@ fn main() {
         .add_startup_system(set_window_resolution)
         .add_startup_system(tilemap::load_map)
         .add_system(player_move)
-        .add_system(stop_jump)
+        .add_system(check_collisions)
+        .add_startup_system(enemy::spawn_enemy)
+		.add_system(enemy::enemy_move)
         .run()
 }
 
@@ -35,7 +39,7 @@ fn init(mut commands: Commands) {
     camera_bundle.orthographic_projection.scale = 4.0 / PIXEL_MULTIPLIER;
     camera_bundle.transform.translation.x = tilemap::TILE_SIZE as f32 * 8.0;
     camera_bundle.transform.translation.y = tilemap::TILE_SIZE as f32 * 6.0;
-    commands.spawn_bundle(camera_bundle);
+    commands.spawn_bundle(camera_bundle).insert(enemy::MainCamera);
 }
 
 fn set_window_resolution(mut windows: ResMut<Windows>) {
@@ -111,11 +115,18 @@ fn player_move(mut commands: Commands, mut player: Query<(Entity, &mut Velocity)
     }
 }
 
-fn stop_jump(mut events: EventReader<CollisionEvent>, mut jump: ResMut<Jump>) {
+fn check_collisions(mut events: EventReader<CollisionEvent>, mut jump: ResMut<Jump>,  player: Query<Entity, With<Player>>, enemy: Query<Entity, With<enemy::Enemy>>) {
+    let id = player.single();
+    let enemy = enemy.single();
     for event in events.iter() {
         match event {
-            CollisionEvent::Started(_d1, _d2) => {
-				jump.0 = false;
+            CollisionEvent::Started(d1, d2) => {
+                if d1.rigid_body_entity() == id || d2.rigid_body_entity() == id {
+				    jump.0 = false;
+                }
+                if (d1.rigid_body_entity() == id && d2.rigid_body_entity() == enemy) || (d1.rigid_body_entity() == enemy && d2.rigid_body_entity() == id) {
+				    println!("Oh no!");
+                }
             }
             CollisionEvent::Stopped(_d1, _d2) => ()
         }
