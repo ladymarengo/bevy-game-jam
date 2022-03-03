@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use heron::*;
+use std::path::Path;
 
 pub const TILE_SIZE: usize = 16;
 
@@ -89,6 +91,7 @@ pub fn load_map(
                             col,
                             layer_index,
                             tile.gid,
+                            is_collision_layer,
                         );
 
                         if is_collision_layer {
@@ -114,20 +117,27 @@ fn create_tile_sprite(
     col: usize,
     order: u32,
     tile_id: u32,
+    has_collision: bool,
 ) {
-    commands
-        .spawn_bundle(SpriteSheetBundle {
-            texture_atlas: texture_atlas_handle.clone(),
-            sprite: TextureAtlasSprite {
-                index: (tile_id as usize) - 1,
-                ..Default::default()
-            },
-            transform: Transform::from_xyz(
-                (col * TILE_SIZE) as f32,
-                ((height - row - 1) * TILE_SIZE) as f32,
-                order as f32,
-            ),
+    let position = Vec2::new(
+        (col * TILE_SIZE) as f32,
+        ((height - row - 1) * TILE_SIZE) as f32,
+    );
+    let mut entity = commands.spawn_bundle(SpriteSheetBundle {
+        texture_atlas: texture_atlas_handle.clone(),
+        sprite: TextureAtlasSprite {
+            index: (tile_id as usize) - 1,
             ..Default::default()
-        })
-        .insert(Parent(tilemap_container));
+        },
+        transform: Transform::from_xyz(position.x, position.y, order as f32),
+        ..Default::default()
+    });
+    entity.insert(Parent(tilemap_container));
+    if has_collision {
+        entity.insert(RigidBody::Static);
+        entity.insert(CollisionShape::Cuboid {
+            half_extends: (Vec3::new(TILE_SIZE as f32 / 2.0, TILE_SIZE as f32 / 2.0, 0.0)),
+            border_radius: None,
+        });
+    }
 }
