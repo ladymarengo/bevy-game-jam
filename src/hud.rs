@@ -156,14 +156,18 @@ pub fn spawn_hint(parent: &mut ChildBuilder, asset_server: &Res<AssetServer>) {
 pub fn fade_out_hint(
     mut commands: Commands,
     time: Res<Time>,
-    mut hint: Query<&mut Text, With<HintLabel>>,
+    mut hint: Query<(&mut Text, &mut Visibility), With<HintLabel>>,
     stopwatch: Option<ResMut<HintStopwatch>>,
 ) {
     match stopwatch {
         None => commands.insert_resource(HintStopwatch(Timer::from_seconds(10.0, false))),
         Some(sw) if sw.0.finished() => {
-            let style = &mut hint.single_mut().sections[0].style;
+            let (mut text, mut vis) = hint.single_mut(); 
+            let style = &mut text.sections[0].style;
             style.color.set_a(style.color.a() * 0.96);
+            if style.color.a() < 0.01 {
+                vis.is_visible = false;
+            }
         }
         Some(mut sw) => {
             sw.0.tick(time.delta());
