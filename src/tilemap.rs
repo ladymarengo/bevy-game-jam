@@ -108,6 +108,9 @@ fn load_map(
     let mut layer_index = 0;
     for layer in map.layers {
         layer_index += 1;
+        if layer.name == "water" {
+            continue;
+        }
         let is_collision_layer = layer.name == COLLISION_LAYER_NAME;
         if let tiled::LayerData::Finite(tiles) = layer.tiles {
             for row in 0..height {
