@@ -130,24 +130,34 @@ fn check_collisions(
     enemy: Query<Entity, With<enemy::Enemy>>,
 ) {
     let id = player.single();
-    let enemy = enemy.single();
     for event in events.iter() {
         match event {
-            CollisionEvent::Started(d1, d2) => {
-                if d1.rigid_body_entity() == id || d2.rigid_body_entity() == id {
-                    jump.0 = false;
-                }
-                if (d1.rigid_body_entity() == id && d2.rigid_body_entity() == enemy)
-                    || (d1.rigid_body_entity() == enemy && d2.rigid_body_entity() == id)
-                {
-                    println!("Oh no!");
-                }
+            CollisionEvent::Started(player_c, other_c) if player_c.rigid_body_entity() == id => {
+                handle_player_collision(player_c, other_c, &mut jump, &enemy);
             }
-            CollisionEvent::Stopped(_d1, _d2) => (),
+            CollisionEvent::Started(other_c, player_c) if player_c.rigid_body_entity() == id => {
+                handle_player_collision(player_c, other_c, &mut jump, &enemy);
+            }
+            _ => (),
         }
     }
 }
 
+fn handle_player_collision(
+    player: &CollisionData,
+    other: &CollisionData,
+    jump: &mut ResMut<Jump>,
+    enemy: &Query<Entity, With<enemy::Enemy>>,
+) {
+    if player.normals().iter().any(|normal| normal.y >= 0.9) {
+        jump.0 = false;
+    }
+
+    let enemy = enemy.single();
+    if other.rigid_body_entity() == enemy {
+        println!("Oh no!");
+    }
+}
 
 #[allow(clippy::type_complexity)]
 fn cameraman(mut position_queries: QuerySet<(
