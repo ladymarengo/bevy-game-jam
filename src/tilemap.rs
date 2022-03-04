@@ -117,13 +117,13 @@ fn load_map(
         .id();
 
     let mut layer_index = 0;
-    for layer in map.layers {
+    for layer in &map.layers {
         layer_index += 1;
         if layer.name == "water" {
             continue;
         }
         let is_collision_layer = layer.name == COLLISION_LAYER_NAME;
-        if let tiled::LayerData::Finite(tiles) = layer.tiles {
+        if let tiled::LayerData::Finite(tiles) = &layer.tiles {
             for row in 0..height {
                 for col in 0..width {
                     let tile = tiles[row][col];
@@ -153,15 +153,15 @@ fn load_map(
     }
 
     let mut has_player_start = false;
-    for object_group in map.object_groups {
-        for object in object_group.objects {
+    for object_group in &map.object_groups {
+        for object in &object_group.objects {
             if object.obj_type == OBJ_TYPE_PLAYER_START {
                 crate::player::spawn(
                     commands,
                     &asset_server,
                     texture_atlases,
                     animations,
-                    Vec2::new(object.x, object.y),
+                    position_tmx_to_world(&map, object),
                 );
                 has_player_start = true;
             }
@@ -206,4 +206,11 @@ fn create_tile_sprite(
             border_radius: None,
         });
     }
+}
+
+fn position_tmx_to_world(map: &tiled::Map, object: &tiled::Object) -> Vec2 {
+    Vec2::new(
+        object.x,
+        (map.height * TILE_SIZE as u32) as f32 - object.y + object.height,
+    )
 }
