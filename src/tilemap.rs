@@ -11,6 +11,7 @@ const COLLISION_LAYER_NAME: &str = "collision";
 const OBJ_TYPE_PLAYER_START: &str = "player_start";
 const OBJ_TYPE_ANGLERFISH: &str = "anglerfish";
 const OBJ_TYPE_SAWFISH: &str = "sawfish";
+const OBJ_TYPE_STAR: &str = "star";
 
 const TILESET_WIDTH: usize = 16;
 const TILESET_HEIGHT: usize = 5;
@@ -194,6 +195,14 @@ fn load_map(
                     animations,
                     animation_handles,
                     position_tmx_to_world(&map, object),
+                );
+            } else if object.obj_type == OBJ_TYPE_STAR {
+                crate::spawn_stars(
+                    commands,
+                    asset_server,
+                    position_tmx_to_world(&map, object),
+                    texture_atlases,
+                    animations,
                 );
             }
         }

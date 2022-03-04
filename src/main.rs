@@ -4,11 +4,12 @@ use bevy::prelude::*;
 use heron::*;
 use hud::{spawn_hud, update_advantage, update_hp_meter};
 use instant::Instant;
+use std::time::Duration;
 
-mod player;
 mod advantage;
 mod enemy;
 mod hud;
+mod player;
 mod tilemap;
 
 #[derive(Component)]
@@ -35,7 +36,7 @@ fn main() {
         .insert_resource(player::Jump(0))
         .insert_resource(Hit(false))
         .insert_resource(HitTime(Instant::now()))
-        .insert_resource(Hp(20))
+        .insert_resource(Hp(5))
         .insert_resource(Advantage::random())
         .add_startup_system(init)
         .add_startup_system(set_window_resolution)
@@ -48,7 +49,6 @@ fn main() {
         .add_startup_system(spawn_hud)
         .add_system(update_hp_meter)
         .add_system(update_advantage)
-        .add_startup_system(spawn_stars)
         // .add_system_to_stage(CoreStage::PostUpdate, delete_stars)
         .run()
 }
@@ -243,30 +243,38 @@ fn cameraman(
 #[derive(Component)]
 pub struct Star;
 
-fn spawn_stars(mut commands: Commands) {
+fn spawn_stars(
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    position: Vec2,
+    textures: &mut ResMut<Assets<TextureAtlas>>,
+    animations: &mut ResMut<Assets<SpriteSheetAnimation>>,
+) {
+
+    let animation_handle = animations.add(SpriteSheetAnimation::from_range(
+        0..=2,
+        Duration::from_millis(100),
+    ));
+
     commands
-        .spawn_bundle(SpriteBundle {
+        .spawn_bundle(SpriteSheetBundle {
+            texture_atlas: textures.add(TextureAtlas::from_grid(
+                asset_server.load("star.png"),
+                Vec2::new(15.0, 15.0),
+                3,
+                1,
+            )),
             transform: Transform {
-                translation: Vec3::new(tilemap::TILE_SIZE as f32 * 20.0,
-                    tilemap::TILE_SIZE as f32 * 32.0,
-                    4.0,),
-                scale: Vec3::new(10.0, 10.0, 0.0),
-                ..Default::default()
-            },
-            sprite: Sprite {
-                color: Color::rgb(1.0, 0.0, 0.0),
+                translation: Vec3::new(position.x, position.y, 4.0),
                 ..Default::default()
             },
             ..Default::default()
         })
         .insert(Star)
         .insert(RigidBody::Static)
+        .insert(animation_handle)
+        .insert(Play)
         .with_children(|children| {
-            children.spawn_bundle((
-                SensorShape,
-                CollisionShape::Sphere {
-                    radius: 5.0,
-                },
-            ));
+            children.spawn_bundle((SensorShape, CollisionShape::Sphere { radius: 5.0 }));
         });
 }
