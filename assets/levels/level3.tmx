@@ -112,13 +112,13 @@
 </data>
  </layer>
  <objectgroup id="6" name="objects">
-  <object id="1" name="player_start" type="player_start" x="226" y="271" width="32" height="32"/>
-  <object id="2" type="anglerfish" x="540" y="358" width="64" height="64"/>
-  <object id="3" type="sawfish" x="1342.67" y="260" width="64" height="64"/>
-  <object id="4" type="sawfish" x="1430.67" y="659.667" width="64" height="64"/>
-  <object id="5" type="anglerfish" x="2468" y="495" width="64" height="64"/>
-  <object id="6" type="anglerfish" x="2870.67" y="370.667" width="64" height="64"/>
-  <object id="8" type="sawfish" x="2076.66" y="561.663" width="63.3333" height="60.6667"/>
+  <object id="1" name="player_start" type="player_start" x="238" y="233.667" width="32" height="32"/>
+  <object id="2" type="anglerfish" x="530.667" y="300.667" width="64" height="64"/>
+  <object id="3" type="sawfish" x="1346.67" y="205.333" width="64" height="64"/>
+  <object id="4" type="sawfish" x="1438.67" y="599.667" width="64" height="64"/>
+  <object id="5" type="anglerfish" x="2436" y="444.333" width="64" height="64"/>
+  <object id="6" type="anglerfish" x="2840" y="316" width="64" height="64"/>
+  <object id="8" type="sawfish" x="2081.99" y="506.996" width="63.3333" height="60.6667"/>
   <object id="9" type="star" x="485.333" y="261.333">
    <point/>
   </object>
