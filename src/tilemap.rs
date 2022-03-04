@@ -4,9 +4,7 @@ use heron::*;
 pub const TILE_SIZE: usize = 16;
 
 const TILESET_ASSET: &str = "terrain.png";
-static TILEMAPS_TMX: [&[u8]; 1] = [
-    include_bytes!("../assets/levels/level1.tmx")
-];
+static TILEMAPS_TMX: [&[u8]; 1] = [include_bytes!("../assets/levels/level1.tmx")];
 
 const COLLISION_LAYER_NAME: &str = "collision";
 
@@ -46,12 +44,10 @@ pub struct TilemapContainer {
     pub height: usize,
 }
 
-pub fn load_map(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-) {
-    let map = tiled::parse(TILEMAPS_TMX[0]).unwrap();
+fn create_tilemap_atlas(
+    asset_server: &Res<AssetServer>,
+    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+) -> Handle<TextureAtlas> {
     let texture = asset_server.load(TILESET_ASSET);
     let texture_atlas = TextureAtlas::from_grid(
         texture,
@@ -59,7 +55,30 @@ pub fn load_map(
         TILESET_WIDTH,
         TILESET_HEIGHT,
     );
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+    texture_atlases.add(texture_atlas)
+}
+
+pub fn load_initial_map(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
+    load_map(
+        &mut commands,
+        &asset_server,
+        &mut texture_atlases,
+        0,
+    );
+}
+
+fn load_map(
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+    index: usize,
+) {
+    let map = tiled::parse(TILEMAPS_TMX[index]).unwrap();
+    let texture_atlas_handle = create_tilemap_atlas(asset_server, texture_atlases);
 
     let mut collision_tiles = CollisionTiles::new(map.width as usize, map.height as usize);
 
@@ -84,7 +103,7 @@ pub fn load_map(
 
                     if tile.gid != 0 {
                         create_tile_sprite(
-                            &mut commands,
+                            commands,
                             tilemap_container.clone(),
                             texture_atlas_handle.clone(),
                             height,

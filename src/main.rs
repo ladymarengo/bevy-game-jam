@@ -27,7 +27,7 @@ fn main() {
         .add_startup_system(init)
         .add_startup_system(spawn_player)
         .add_startup_system(set_window_resolution)
-        .add_startup_system(tilemap::load_map)
+        .add_startup_system(tilemap::load_initial_map)
         .add_system(player_move)
         .add_system(check_collisions)
         .add_startup_system(enemy::spawn_enemy)
