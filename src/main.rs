@@ -25,7 +25,7 @@ pub struct HitTime(Instant);
 
 pub struct Hp(pub u8);
 
-const PIXEL_MULTIPLIER: f32 = 4.0;
+const PIXEL_MULTIPLIER: f32 = 3.0;
 
 fn main() {
     App::new()
@@ -34,7 +34,8 @@ fn main() {
         .add_plugin(PhysicsPlugin::default())
         .add_plugin(AnimationPlugin::default())
         .add_system(bevy::input::system::exit_on_esc_system)
-        .insert_resource(Gravity::from(Vec2::new(0.0, -2000.0)))
+        .insert_resource(ClearColor(Color::hex("29366f").unwrap()))
+        .insert_resource(Gravity::from(Vec2::new(0.0, -1500.0)))
         .insert_resource(Jump(false))
         .insert_resource(Hit(false))
         .insert_resource(HitTime(Instant::now()))
@@ -66,7 +67,7 @@ fn set_window_resolution(mut windows: ResMut<Windows>) {
     windows
         .get_primary_mut()
         .unwrap()
-        .set_resolution(256.0 * PIXEL_MULTIPLIER, 215.0 * PIXEL_MULTIPLIER);
+        .set_resolution(341.0 * PIXEL_MULTIPLIER, 256.0 * PIXEL_MULTIPLIER);
 }
 
 fn spawn_player(
@@ -91,7 +92,7 @@ fn spawn_player(
                 index: 0,
                 ..Default::default()
             },
-            transform: Transform::from_translation(Vec3::new(150.0, 230.0, 5.0)),
+            transform: Transform::from_translation(Vec3::new(tilemap::TILE_SIZE as f32 * 16.0, tilemap::TILE_SIZE as f32 * 35.0, 5.0)),
             ..Default::default()
         })
         .insert(RigidBody::Dynamic)
@@ -121,7 +122,7 @@ fn player_move(
     commands.entity(id).remove::<Play>();
 
     if keys.pressed(KeyCode::W) && !jump.0 {
-        player.linear[1] = 800.0;
+        player.linear[1] = 600.0;
         jump.0 = true;
     }
     if keys.pressed(KeyCode::A) {
@@ -137,7 +138,7 @@ fn player_move(
         }
     }
     if keys.pressed(KeyCode::S) {
-        player.linear[1] = -500.0;
+        player.linear[1] = -400.0;
     }
 }
 
