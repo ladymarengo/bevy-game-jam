@@ -39,7 +39,7 @@ impl CollisionTiles {
 }
 
 #[derive(Component)]
-pub struct TilemapContainer {
+pub struct Map {
     pub width: usize,
     pub height: usize,
 }
@@ -58,11 +58,11 @@ fn create_tilemap_atlas(
     texture_atlases.add(texture_atlas)
 }
 
-fn clear_map(commands: &mut Commands, map_container_query: &Query<Entity, With<TilemapContainer>>) {
-    let map_container = map_container_query
+fn clear_map(commands: &mut Commands, map_query: &Query<Entity, With<Map>>) {
+    let map = map_query
         .get_single()
         .expect("Map must be loaded (and only single instance)");
-    commands.entity(map_container).despawn_recursive();
+    commands.entity(map).despawn_recursive();
 }
 
 pub fn load_initial_map(
@@ -75,12 +75,12 @@ pub fn load_initial_map(
 
 pub fn change_map(
     commands: &mut Commands,
-    map_container_query: &Query<Entity, With<TilemapContainer>>,
+    map_query: &Query<Entity, With<Map>>,
     asset_server: &Res<AssetServer>,
     texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
     index: usize,
 ) {
-    clear_map(commands, map_container_query);
+    clear_map(commands, map_query);
     load_map(commands, asset_server, texture_atlases, index);
 }
 
@@ -98,9 +98,9 @@ fn load_map(
     let width = map.width as usize;
     let height = map.height as usize;
 
-    let tilemap_container = commands
+    let map_entity = commands
         .spawn()
-        .insert(TilemapContainer { width, height })
+        .insert(Map { width, height })
         .insert(Transform::default())
         .insert(GlobalTransform::default())
         .id();
@@ -117,7 +117,7 @@ fn load_map(
                     if tile.gid != 0 {
                         create_tile_sprite(
                             commands,
-                            tilemap_container.clone(),
+                            map_entity.clone(),
                             texture_atlas_handle.clone(),
                             height,
                             row,
@@ -143,7 +143,7 @@ fn load_map(
 
 fn create_tile_sprite(
     commands: &mut Commands,
-    tilemap_container: Entity,
+    map: Entity,
     texture_atlas_handle: Handle<TextureAtlas>,
     height: usize,
     row: usize,
@@ -165,7 +165,7 @@ fn create_tile_sprite(
         transform: Transform::from_xyz(position.x, position.y, order as f32),
         ..Default::default()
     });
-    entity.insert(Parent(tilemap_container));
+    entity.insert(Parent(map));
     if has_collision {
         entity.insert(RigidBody::Static);
         entity.insert(CollisionShape::Cuboid {
