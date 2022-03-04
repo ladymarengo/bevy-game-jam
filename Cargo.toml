@@ -9,6 +9,7 @@ tiled = { version = "0.9.5", default_features = false }
 heron = { version = "2.0.1", default-features = false, features = ["2d"] }
 benimator = "2.1.0"
 instant = "0.1.12"
+rand = "0.8.5"
 
 [profile.dev.package."*"]
 opt-level = 3

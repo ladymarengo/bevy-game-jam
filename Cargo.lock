@@ -202,6 +202,7 @@ dependencies = [
  "bevy",
  "heron",
  "instant",
+ "rand",
  "tiled",
 ]
 
