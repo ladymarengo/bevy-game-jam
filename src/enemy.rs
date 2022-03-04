@@ -1,4 +1,6 @@
-use super::{Player, Hit};
+use crate::advantage::{Advantage, EnemyAdvantage};
+
+use super::{Hit, Player};
 use benimator::*;
 use bevy::prelude::*;
 use heron::*;
@@ -112,14 +114,22 @@ pub fn enemy_move(
     player: Query<&Transform, With<Player>>,
     animations: Res<Animations>,
     hit: ResMut<Hit>,
+    adv: Res<Advantage>,
 ) {
     let player = player.single();
+    let enemy_speed = if matches!(
+        adv.into_inner(),
+        Advantage::Enemy(EnemyAdvantage::DoubleSpeed)
+    ) {
+        200.0
+    } else {
+        100.0
+    };
 
     for (enemy_transform, mut enemy_vel, mut direction, mut animation) in enemy.iter_mut() {
-    
         match *direction {
-            Direction::Left => enemy_vel.linear[0] = -100.0,
-            Direction::Right => enemy_vel.linear[0] = 100.0,
+            Direction::Left => enemy_vel.linear[0] = -enemy_speed,
+            Direction::Right => enemy_vel.linear[0] = enemy_speed,
         }
         if enemy_transform.translation.x < 100.0 {
             *animation = animations.right.clone();
