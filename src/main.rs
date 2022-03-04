@@ -25,8 +25,16 @@ pub struct Hp(pub u8);
 
 const PIXEL_MULTIPLIER: f32 = 3.0;
 
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+enum AppState {
+    InGame,
+    Died,
+    Won,
+}
+
 fn main() {
     App::new()
+        .add_state(AppState::InGame)
         .init_resource::<enemy::Animations>()
         .add_plugins(DefaultPlugins)
         .add_plugin(PhysicsPlugin::default())
@@ -42,11 +50,24 @@ fn main() {
         .add_startup_system(init)
         .add_startup_system(set_window_resolution)
         .add_startup_system(tilemap::load_initial_map)
-        .add_system(player::r#move)
-        .add_system(check_collisions)
-        .add_system(enemy::r#move)
-        .add_system(cameraman)
-        .add_system(check_hits)
+
+        .add_system_set(
+            SystemSet::on_update(AppState::InGame)
+                .with_system(player::r#move)
+                .with_system(check_collisions)
+                .with_system(enemy::r#move)
+                .with_system(cameraman)
+                .with_system(check_hits)
+        )
+        .add_system_set(
+            SystemSet::on_enter(AppState::Died)
+                .with_system(on_die)
+        )
+        .add_system_set(
+            SystemSet::on_enter(AppState::Won)
+                .with_system(on_win)
+        )
+
         // HUD
         .add_startup_system(spawn_hud)
         .add_system(update_hp_meter)
@@ -92,6 +113,7 @@ fn check_collisions(
     mut commands: Commands,
     mut hp: ResMut<Hp>,
     adv: Res<Advantage>,
+    mut app_state: ResMut<State<AppState>>
 ) {
     let id = player.single();
     for event in events.iter() {
@@ -112,6 +134,7 @@ fn check_collisions(
                     &mut commands,
                     &mut hp,
                     &adv,
+                    &mut app_state,
                 );
             }
             CollisionEvent::Started(other_c, player_c) if player_c.rigid_body_entity() == id => {
@@ -130,6 +153,7 @@ fn check_collisions(
                     &mut commands,
                     &mut hp,
                     &adv,
+                    &mut app_state,
                 );
             }
             CollisionEvent::Stopped(player_c, other_c) if player_c.rigid_body_entity() == id => {
@@ -148,6 +172,7 @@ fn check_collisions(
                     &mut commands,
                     &mut hp,
                     &adv,
+                    &mut app_state,
                 );
             }
             CollisionEvent::Stopped(other_c, player_c) if player_c.rigid_body_entity() == id => {
@@ -166,6 +191,7 @@ fn check_collisions(
                     &mut commands,
                     &mut hp,
                     &adv,
+                    &mut app_state,
                 );
             }
             _ => (),
@@ -196,6 +222,7 @@ fn handle_player_collision(
     commands: &mut Commands,
     hp: &mut ResMut<Hp>,
     adv: &Res<Advantage>,
+    app_state: &mut ResMut<State<AppState>>
 ) {
     if player.normals().iter().any(|normal| normal.y >= 0.9) {
         jump.0 = 0;
@@ -231,6 +258,8 @@ fn handle_player_collision(
         let map_component = map.single();
         info!("Goal reached, changing map to {}", map_component.index + 1);
 
+        app_state.set(AppState::Won).unwrap();
+
         // TODO: changing map does not work, hangs
 
         // tilemap::change_map(
@@ -252,6 +281,7 @@ fn check_hits(
     mut hit_time: ResMut<HitTime>,
     mut hp: ResMut<Hp>,
     advantage: Res<Advantage>,
+    mut app_state: ResMut<State<AppState>>
 ) {
     if hit.0 && hit_time.0.elapsed().as_millis() > 300 {
         let bite_strength = if matches!(
@@ -262,7 +292,14 @@ fn check_hits(
         } else {
             1
         };
-        hp.0 -= bite_strength;
+
+        if hp.0 > bite_strength {
+            hp.0 -= bite_strength;
+        } else {
+            hp.0 = 0;
+            app_state.set(AppState::Died).unwrap();
+        }
+
         hit_time.0 = Instant::now();
     }
 }
@@ -332,4 +369,70 @@ fn spawn_stars(
         .with_children(|children| {
             children.spawn_bundle((SensorShape, CollisionShape::Sphere { radius: 5.0 }));
         });
+}
+
+fn on_die(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn_bundle(SpriteBundle {
+        sprite: Sprite {
+            color: Color::BLACK,
+            custom_size: Some(Vec2::new(10000.0, 10000.0)),
+            ..Default::default()
+        },
+        transform:  Transform::from_translation(Vec3::new(0.0, 0.0, 100.0)),
+        ..Default::default()
+    });
+    commands.spawn_bundle(TextBundle {
+        style: Style {
+            position_type: PositionType::Absolute,
+            size: Size::new(Val::Percent(50.0), Val::Percent(50.0)),
+            ..Default::default()
+        },
+        text: Text::with_section(
+            "You died",
+            TextStyle {
+                font: asset_server.load("PublicPixel-0W6DP.ttf"),
+                font_size: 30.0,
+                color: Color::RED,
+            },
+            TextAlignment {
+                vertical: VerticalAlign::Center,
+                horizontal: HorizontalAlign::Center,
+            },
+        ),
+        ..Default::default()
+    });
+}
+
+fn on_win(mut commands: Commands, asset_server: Res<AssetServer>) {
+
+    commands.spawn_bundle(SpriteBundle {
+        sprite: Sprite {
+            color: Color::BEIGE,
+            custom_size: Some(Vec2::new(10000.0, 10000.0)),
+            ..Default::default()
+        },
+        transform:  Transform::from_translation(Vec3::new(0.0, 0.0, 100.0)),
+        ..Default::default()
+    });
+    
+    commands.spawn_bundle(TextBundle {
+        style: Style {
+            position_type: PositionType::Absolute,
+            size: Size::new(Val::Percent(50.0), Val::Percent(50.0)),
+            ..Default::default()
+        },
+        text: Text::with_section(
+            "You won",
+            TextStyle {
+                font: asset_server.load("PublicPixel-0W6DP.ttf"),
+                font_size: 30.0,
+                color: Color::LIME_GREEN,
+            },
+            TextAlignment {
+                vertical: VerticalAlign::Center,
+                horizontal: HorizontalAlign::Center,
+            },
+        ),
+        ..Default::default()
+    });
 }
