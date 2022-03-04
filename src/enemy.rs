@@ -21,6 +21,8 @@ pub struct MainCamera;
 pub struct Animations {
     left: Handle<SpriteSheetAnimation>,
     right: Handle<SpriteSheetAnimation>,
+    bite_left: Handle<SpriteSheetAnimation>,
+    bite_right: Handle<SpriteSheetAnimation>,
 }
 
 
@@ -29,16 +31,26 @@ pub fn spawn_enemy(mut commands: Commands, asset_server: Res<AssetServer>,
     mut animations: ResMut<Assets<SpriteSheetAnimation>>,
     mut handles: ResMut<Animations>) {
     let texture = asset_server.load("enemy.png");
-    let texture_atlas = TextureAtlas::from_grid(texture, Vec2::new(64.0, 64.0), 16, 1);
+    let texture_atlas = TextureAtlas::from_grid(texture, Vec2::new(64.0, 64.0), 22, 1);
     let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
     handles.left = animations.add(SpriteSheetAnimation::from_range(
-        0..=7,
+        6..=13,
         Duration::from_millis(100),
     ));
 
     handles.right = animations.add(SpriteSheetAnimation::from_range(
-        9..=15,
+        14..=21,
+        Duration::from_millis(100),
+    ));
+
+    handles.bite_left = animations.add(SpriteSheetAnimation::from_range(
+        0..=2,
+        Duration::from_millis(100),
+    ));
+
+    handles.bite_right = animations.add(SpriteSheetAnimation::from_range(
+        3..=5,
         Duration::from_millis(100),
     ));
 
