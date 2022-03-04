@@ -25,8 +25,16 @@ pub struct Hp(pub u8);
 
 const PIXEL_MULTIPLIER: f32 = 3.0;
 
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+enum AppState {
+    InGame,
+    Died,
+    Won,
+}
+
 fn main() {
     App::new()
+        .add_state(AppState::InGame)
         .init_resource::<enemy::Animations>()
         .add_plugins(DefaultPlugins)
         .add_plugin(PhysicsPlugin::default())
@@ -42,11 +50,20 @@ fn main() {
         .add_startup_system(init)
         .add_startup_system(set_window_resolution)
         .add_startup_system(tilemap::load_initial_map)
-        .add_system(player::r#move)
-        .add_system(check_collisions)
-        .add_system(enemy::r#move)
-        .add_system(cameraman)
-        .add_system(check_hits)
+
+        .add_system_set(
+            SystemSet::on_update(AppState::InGame)
+                .with_system(player::r#move)
+                .with_system(check_collisions)
+                .with_system(enemy::r#move)
+                .with_system(cameraman)
+                .with_system(check_hits)
+        )
+        .add_system_set(
+            SystemSet::on_update(AppState::Died)
+                .with_system(died)
+        )
+
         // HUD
         .add_startup_system(spawn_hud)
         .add_system(update_hp_meter)
@@ -252,6 +269,7 @@ fn check_hits(
     mut hit_time: ResMut<HitTime>,
     mut hp: ResMut<Hp>,
     advantage: Res<Advantage>,
+    mut app_state: ResMut<State<AppState>>
 ) {
     if hit.0 && hit_time.0.elapsed().as_millis() > 300 {
         let bite_strength = if matches!(
@@ -262,7 +280,14 @@ fn check_hits(
         } else {
             1
         };
-        hp.0 -= bite_strength;
+
+        if hp.0 > bite_strength {
+            hp.0 -= bite_strength;
+        } else {
+            hp.0 = 0;
+            app_state.set(AppState::Died).unwrap();
+        }
+
         hit_time.0 = Instant::now();
     }
 }
@@ -332,4 +357,7 @@ fn spawn_stars(
         .with_children(|children| {
             children.spawn_bundle((SensorShape, CollisionShape::Sphere { radius: 5.0 }));
         });
+}
+
+fn died() {
 }
