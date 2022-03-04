@@ -83,7 +83,7 @@ fn spawn_player(
                 index: 0,
                 ..Default::default()
             },
-            transform: Transform::from_translation(Vec3::new(150.0, 230.0, 5.0)),
+            transform: Transform::from_translation(Vec3::new(tilemap::TILE_SIZE as f32 * 16.0, tilemap::TILE_SIZE as f32 * 35.0, 5.0)),
             ..Default::default()
         })
         .insert(RigidBody::Dynamic)

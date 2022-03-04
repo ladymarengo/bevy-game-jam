@@ -4,7 +4,7 @@ use heron::*;
 pub const TILE_SIZE: usize = 16;
 
 const TILESET_ASSET: &str = "terrain.png";
-static TILEMAPS_TMX: [&[u8]; 1] = [include_bytes!("../assets/levels/level1.tmx")];
+static TILEMAPS_TMX: [&[u8]; 1] = [include_bytes!("../assets/levels/level3.tmx")];
 
 const COLLISION_LAYER_NAME: &str = "collision";
 
