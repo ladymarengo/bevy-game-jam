@@ -9,6 +9,7 @@ static TILEMAPS_TMX: [&[u8]; 1] = [include_bytes!("../assets/levels/level3.tmx")
 
 const COLLISION_LAYER_NAME: &str = "collision";
 const OBJ_TYPE_PLAYER_START: &str = "player_start";
+const OBJ_TYPE_ANGLERFISH: &str = "anglerfish";
 
 const TILESET_WIDTH: usize = 16;
 const TILESET_HEIGHT: usize = 5;
@@ -72,12 +73,14 @@ pub fn load_initial_map(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut animations: ResMut<Assets<SpriteSheetAnimation>>,
+    mut animation_handles: ResMut<crate::enemy::Animations>,
 ) {
     load_map(
         &mut commands,
         &asset_server,
         &mut texture_atlases,
         &mut animations,
+        &mut animation_handles,
         0,
     );
 }
@@ -88,10 +91,18 @@ pub fn change_map(
     asset_server: &Res<AssetServer>,
     texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
     animations: &mut ResMut<Assets<SpriteSheetAnimation>>,
+    animation_handles: &mut ResMut<crate::enemy::Animations>,
     index: usize,
 ) {
     clear_map(commands, map_query);
-    load_map(commands, asset_server, texture_atlases, animations, index);
+    load_map(
+        commands,
+        asset_server,
+        texture_atlases,
+        animations,
+        animation_handles,
+        index,
+    );
 }
 
 fn load_map(
@@ -99,6 +110,7 @@ fn load_map(
     asset_server: &Res<AssetServer>,
     texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
     animations: &mut ResMut<Assets<SpriteSheetAnimation>>,
+    animation_handles: &mut ResMut<crate::enemy::Animations>,
     index: usize,
 ) {
     let map = tiled::parse(TILEMAPS_TMX[index]).unwrap();
@@ -164,6 +176,15 @@ fn load_map(
                     position_tmx_to_world(&map, object),
                 );
                 has_player_start = true;
+            } else if object.obj_type == OBJ_TYPE_ANGLERFISH {
+                crate::enemy::spawn(
+                    commands,
+                    asset_server,
+                    texture_atlases,
+                    animations,
+                    animation_handles,
+                    position_tmx_to_world(&map, object),
+                );
             }
         }
     }

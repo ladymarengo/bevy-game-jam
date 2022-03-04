@@ -26,12 +26,13 @@ pub struct Animations {
     bite_right: Handle<SpriteSheetAnimation>,
 }
 
-pub fn spawn_enemy(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    mut animations: ResMut<Assets<SpriteSheetAnimation>>,
-    mut handles: ResMut<Animations>,
+pub fn spawn(
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+    animations: &mut ResMut<Assets<SpriteSheetAnimation>>,
+    handles: &mut ResMut<Animations>,
+    position: Vec2,
 ) {
     let texture = asset_server.load("enemy.png");
     let texture_atlas = TextureAtlas::from_grid(texture, Vec2::new(64.0, 64.0), 22, 1);
@@ -65,7 +66,7 @@ pub fn spawn_enemy(
                 ..Default::default()
             },
             transform: Transform {
-                translation: Vec3::new(200.0, 230.0, 5.0),
+                translation: Vec3::new(position.x, position.y, 5.0),
                 ..Default::default()
             },
             ..Default::default()
@@ -101,7 +102,7 @@ pub fn spawn_enemy(
         .insert(Play);
 }
 
-pub fn enemy_move(
+pub fn r#move(
     mut enemy: Query<
         (
             &Transform,
