@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.8" tiledversion="1.8.2" orientation="orthogonal" renderorder="right-down" width="200" height="50" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="1">
+<map version="1.8" tiledversion="1.8.2" orientation="orthogonal" renderorder="right-down" width="200" height="50" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="17">
  <tileset firstgid="1" name="terrain" tilewidth="16" tileheight="16" tilecount="48" columns="16">
   <image source="../terrain.png" width="256" height="48"/>
  </tileset>
@@ -57,6 +57,37 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
+ <objectgroup id="6" name="Слой объектов 1">
+  <object id="1" type="anglerfish" x="360" y="237" width="62" height="60"/>
+  <object id="2" type="sawfish" x="524" y="610" width="62" height="55"/>
+  <object id="3" type="anglerfish" x="1343" y="271" width="70" height="69"/>
+  <object id="4" type="sawfish" x="1336" y="553" width="69" height="75"/>
+  <object id="6" type="anglerfish" x="1624" y="592" width="70" height="70"/>
+  <object id="7" type="sawfish" x="2142" y="569" width="58" height="48"/>
+  <object id="8" type="anglerfish" x="2641" y="588" width="74" height="75"/>
+  <object id="9" type="star" x="2908" y="649">
+   <point/>
+  </object>
+  <object id="10" type="star" x="2184" y="338">
+   <point/>
+  </object>
+  <object id="11" type="star" x="2277" y="609">
+   <point/>
+  </object>
+  <object id="12" type="star" x="1365" y="435">
+   <point/>
+  </object>
+  <object id="13" type="star" x="744" y="414">
+   <point/>
+  </object>
+  <object id="14" type="star" x="297" y="288">
+   <point/>
+  </object>
+  <object id="15" type="star" x="336" y="289">
+   <point/>
+  </object>
+  <object id="16" type="player_start" x="300" y="601" width="32" height="32"/>
+ </objectgroup>
  <layer id="1" name="collision" width="200" height="50">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
