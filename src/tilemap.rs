@@ -1,11 +1,12 @@
 use benimator::*;
 use bevy::prelude::*;
 use heron::*;
+use rand::Rng;
 
 pub const TILE_SIZE: usize = 16;
 
 const TILESET_ASSET: &str = "terrain.png";
-static TILEMAPS_TMX: [&[u8]; 1] = [include_bytes!("../assets/levels/level3.tmx")];
+static TILEMAPS_TMX: &[&[u8]] = &[include_bytes!("../assets/levels/level3.tmx"), include_bytes!("../assets/levels/level2.tmx")];
 
 const COLLISION_LAYER_NAME: &str = "collision";
 const OBJ_TYPE_PLAYER_START: &str = "player_start";
@@ -77,13 +78,15 @@ pub fn load_initial_map(
     mut animations: ResMut<Assets<SpriteSheetAnimation>>,
     mut animation_handles: ResMut<crate::enemy::Animations>,
 ) {
+    let mut rng = rand::thread_rng();
+    let index = rng.gen_range(0..2);
     load_map(
         &mut commands,
         &asset_server,
         &mut texture_atlases,
         &mut animations,
         &mut animation_handles,
-        0,
+        index,
     );
 }
 
