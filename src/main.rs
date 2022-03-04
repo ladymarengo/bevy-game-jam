@@ -1,8 +1,8 @@
-use advantage::Advantage;
+use advantage::{Advantage, EnemyAdvantage};
 use benimator::*;
 use bevy::prelude::*;
 use heron::*;
-use hud::{spawn_hud, update_hp_meter, update_advantage};
+use hud::{spawn_hud, update_advantage, update_hp_meter};
 use instant::Instant;
 use std::time::Duration;
 
@@ -237,9 +237,22 @@ fn handle_player_collision(
     }
 }
 
-fn check_hits(hit: ResMut<Hit>, mut hit_time: ResMut<HitTime>, mut hp: ResMut<Hp>) {
+fn check_hits(
+    hit: ResMut<Hit>,
+    mut hit_time: ResMut<HitTime>,
+    mut hp: ResMut<Hp>,
+    advantage: Res<Advantage>,
+) {
     if hit.0 && hit_time.0.elapsed().as_millis() > 300 {
-        hp.0 -= 1;
+        let bite_strength = if matches!(
+            advantage.into_inner(),
+            Advantage::Enemy(EnemyAdvantage::DoubleBite)
+        ) {
+            3
+        } else {
+            1
+        };
+        hp.0 -= bite_strength;
         hit_time.0 = Instant::now();
     }
 }

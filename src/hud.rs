@@ -79,14 +79,14 @@ pub fn update_hp_meter(mut hp_label: Query<&mut Text, With<HpLabel>>, hp: Res<Hp
 pub fn update_advantage(mut label: Query<&mut Text, With<AdvantageLabel>>, adv: Res<Advantage>) {
     let section = &mut label.single_mut().sections[0];
     let (color, text) = match adv.into_inner() {
-        Advantage::PlayerAdvantage(pa) => (
+        Advantage::Player(pa) => (
             Color::AQUAMARINE,
             match pa {
                 PlayerAdvantage::DoubleJump => "Double Jump",
                 PlayerAdvantage::DoubleInitialHp => "Double HP",
             },
         ),
-        Advantage::EnemyAdvantage(ea) => (
+        Advantage::Enemy(ea) => (
             Color::ORANGE,
             match ea {
                 EnemyAdvantage::DoubleBite => "Painful bites",

@@ -3,8 +3,8 @@ use rand::prelude::SliceRandom;
 
 #[derive(Clone)]
 pub enum Advantage {
-    PlayerAdvantage(PlayerAdvantage),
-    EnemyAdvantage(EnemyAdvantage)
+    Player(PlayerAdvantage),
+    Enemy(EnemyAdvantage)
 }
 
 #[derive(Clone)]
@@ -20,10 +20,10 @@ pub enum EnemyAdvantage {
 }
 
 static ADVANTAGES: &[Advantage] = &[
-    Advantage::PlayerAdvantage(PlayerAdvantage::DoubleJump),
-    Advantage::PlayerAdvantage(PlayerAdvantage::DoubleInitialHp),
-    Advantage::EnemyAdvantage(EnemyAdvantage::DoubleBite),
-    Advantage::EnemyAdvantage(EnemyAdvantage::DoubleSpeed),
+    Advantage::Player(PlayerAdvantage::DoubleJump),
+    Advantage::Player(PlayerAdvantage::DoubleInitialHp),
+    Advantage::Enemy(EnemyAdvantage::DoubleBite),
+    Advantage::Enemy(EnemyAdvantage::DoubleSpeed),
 ];
 
 impl Advantage {
