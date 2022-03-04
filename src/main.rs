@@ -8,6 +8,7 @@ use std::time::Duration;
 
 mod advantage;
 mod enemy;
+mod goal;
 mod hud;
 mod player;
 mod tilemap;
@@ -77,6 +78,17 @@ fn check_collisions(
     enemy: Query<Entity, With<enemy::Enemy>>,
     mut hit_time: ResMut<HitTime>,
     stars: Query<Entity, With<Star>>,
+    goals: Query<&goal::Goal>,
+    map: Query<&tilemap::Map>,
+    mut change_map_parameters: (
+        Query<Entity, With<tilemap::Map>>,
+        Res<AssetServer>,
+        ResMut<Assets<TextureAtlas>>,
+        ResMut<Assets<SpriteSheetAnimation>>,
+        ResMut<crate::enemy::Animations>,
+        Query<Entity, With<crate::player::Player>>,
+        Query<Entity, With<crate::enemy::Enemy>>,
+    ),
     mut commands: Commands,
     mut hp: ResMut<Hp>,
     adv: Res<Advantage>,
@@ -94,6 +106,9 @@ fn check_collisions(
                     "started",
                     &mut hit_time,
                     &stars,
+                    &goals,
+                    &map,
+                    &mut change_map_parameters,
                     &mut commands,
                     &mut hp,
                     &adv,
@@ -109,6 +124,9 @@ fn check_collisions(
                     "started",
                     &mut hit_time,
                     &stars,
+                    &goals,
+                    &map,
+                    &mut change_map_parameters,
                     &mut commands,
                     &mut hp,
                     &adv,
@@ -124,6 +142,9 @@ fn check_collisions(
                     "stopped",
                     &mut hit_time,
                     &stars,
+                    &goals,
+                    &map,
+                    &mut change_map_parameters,
                     &mut commands,
                     &mut hp,
                     &adv,
@@ -139,6 +160,9 @@ fn check_collisions(
                     "stopped",
                     &mut hit_time,
                     &stars,
+                    &goals,
+                    &map,
+                    &mut change_map_parameters,
                     &mut commands,
                     &mut hp,
                     &adv,
@@ -158,6 +182,17 @@ fn handle_player_collision(
     state: &str,
     hit_time: &mut ResMut<HitTime>,
     stars: &Query<Entity, With<Star>>,
+    goals: &Query<&goal::Goal>,
+    map: &Query<&tilemap::Map>,
+    change_map_parameters: &mut (
+        Query<Entity, With<tilemap::Map>>,
+        Res<AssetServer>,
+        ResMut<Assets<TextureAtlas>>,
+        ResMut<Assets<SpriteSheetAnimation>>,
+        ResMut<crate::enemy::Animations>,
+        Query<Entity, With<crate::player::Player>>,
+        Query<Entity, With<crate::enemy::Enemy>>,
+    ),
     commands: &mut Commands,
     hp: &mut ResMut<Hp>,
     adv: &Res<Advantage>,
@@ -190,6 +225,25 @@ fn handle_player_collision(
         };
 
         commands.entity(other_entity).despawn();
+    }
+
+    if goals.get(other_entity).is_ok() {
+        let map_component = map.single();
+        info!("Goal reached, changing map to {}", map_component.index + 1);
+
+        // TODO: changing map does not work, hangs
+
+        // tilemap::change_map(
+        //     commands,
+        //     &change_map_parameters.0,
+        //     &change_map_parameters.1,
+        //     &mut change_map_parameters.2,
+        //     &mut change_map_parameters.3,
+        //     &mut change_map_parameters.4,
+        //     &change_map_parameters.5,
+        //     &change_map_parameters.6,
+        //     map_component.index + 1,
+        // );
     }
 }
 

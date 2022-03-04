@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.8" tiledversion="1.8.2" orientation="orthogonal" renderorder="right-down" width="64" height="32" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="13">
- <tileset firstgid="1" name="terrain" tilewidth="16" tileheight="16" tilecount="48" columns="16">
+ <tileset firstgid="1" name="terrain" tilewidth="16" tileheight="16" tilecount="0" columns="16">
   <image source="terrain.png" width="256" height="48"/>
  </tileset>
  <layer id="2" name="water" width="64" height="32" locked="1">
@@ -132,7 +132,7 @@
     <property name="advantage" type="bool" value="false"/>
    </properties>
   </object>
-  <object id="10" name="player_start" type="player_start" x="60" y="367" width="32" height="32"/>
+  <object id="10" name="player_start" type="player_start" x="74" y="355" width="32" height="32"/>
   <object id="12" name="goal" type="goal" x="915" y="220" width="90" height="147"/>
  </objectgroup>
 </map>
