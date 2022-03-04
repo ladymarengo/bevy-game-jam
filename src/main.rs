@@ -1,10 +1,12 @@
+use advantage::{Advantage, EnemyAdvantage};
 use benimator::*;
 use bevy::prelude::*;
 use heron::*;
-use hud::{spawn_hp_meter, update_hp_meter};
+use hud::{spawn_hud, update_advantage, update_hp_meter};
 use instant::Instant;
 use std::time::Duration;
 
+mod advantage;
 mod enemy;
 mod hud;
 mod tilemap;
@@ -15,8 +17,9 @@ struct MainCamera;
 #[derive(Component)]
 pub struct Player;
 
+/// Amount of jumps performed in current flight
 #[derive(Default)]
-struct Jump(bool);
+struct Jump(u8);
 
 #[derive(Default)]
 pub struct Hit(bool);
@@ -36,10 +39,11 @@ fn main() {
         .add_system(bevy::input::system::exit_on_esc_system)
         .insert_resource(ClearColor(Color::hex("29366f").unwrap()))
         .insert_resource(Gravity::from(Vec2::new(0.0, -1500.0)))
-        .insert_resource(Jump(false))
+        .insert_resource(Jump(0))
         .insert_resource(Hit(false))
         .insert_resource(HitTime(Instant::now()))
         .insert_resource(Hp(20))
+        .insert_resource(Advantage::random())
         .add_startup_system(init)
         .add_startup_system(spawn_player)
         .add_startup_system(set_window_resolution)
@@ -50,8 +54,9 @@ fn main() {
         .add_system(enemy::enemy_move)
         .add_system(cameraman)
         .add_system(check_hits)
-        .add_startup_system(spawn_hp_meter)
+        .add_startup_system(spawn_hud)
         .add_system(update_hp_meter)
+        .add_system(update_advantage)
         .run()
 }
 
@@ -92,7 +97,11 @@ fn spawn_player(
                 index: 0,
                 ..Default::default()
             },
-            transform: Transform::from_translation(Vec3::new(tilemap::TILE_SIZE as f32 * 16.0, tilemap::TILE_SIZE as f32 * 35.0, 5.0)),
+            transform: Transform::from_translation(Vec3::new(
+                tilemap::TILE_SIZE as f32 * 16.0,
+                tilemap::TILE_SIZE as f32 * 35.0,
+                5.0,
+            )),
             ..Default::default()
         })
         .insert(RigidBody::Dynamic)
@@ -116,29 +125,44 @@ fn player_move(
     mut player: Query<(Entity, &mut Velocity), With<Player>>,
     keys: Res<Input<KeyCode>>,
     mut jump: ResMut<Jump>,
+    mut adv: ResMut<Advantage>,
 ) {
     let (id, mut player) = player.single_mut();
+    let max_jumps = if matches!(
+        adv.as_ref(),
+        Advantage::Player(advantage::PlayerAdvantage::DoubleJump)
+    ) {
+        2
+    } else {
+        1
+    };
 
     commands.entity(id).remove::<Play>();
+    let can_jump = jump.0 < max_jumps;
+    let is_not_jumping = jump.0 == 0;
 
-    if keys.pressed(KeyCode::W) && !jump.0 {
+    if keys.just_pressed(KeyCode::W) && can_jump {
         player.linear[1] = 600.0;
-        jump.0 = true;
+        jump.0 += 1;
     }
     if keys.pressed(KeyCode::A) {
         player.linear[0] = -200.0;
-        if !jump.0 {
+        if is_not_jumping {
             commands.entity(id).insert(Play);
         }
     }
     if keys.pressed(KeyCode::D) {
         player.linear[0] = 200.0;
-        if !jump.0 {
+        if is_not_jumping {
             commands.entity(id).insert(Play);
         }
     }
     if keys.pressed(KeyCode::S) {
         player.linear[1] = -400.0;
+    }
+
+    if option_env!("CHEATS").is_some() && keys.just_pressed(KeyCode::R) {
+        *adv = Advantage::random();
     }
 }
 
@@ -212,7 +236,7 @@ fn handle_player_collision(
     hit_time: &mut ResMut<HitTime>,
 ) {
     if player.normals().iter().any(|normal| normal.y >= 0.9) {
-        jump.0 = false;
+        jump.0 = 0;
     }
 
     for enemy in enemy.iter() {
@@ -229,9 +253,22 @@ fn handle_player_collision(
     }
 }
 
-fn check_hits(hit: ResMut<Hit>, mut hit_time: ResMut<HitTime>, mut hp: ResMut<Hp>) {
+fn check_hits(
+    hit: ResMut<Hit>,
+    mut hit_time: ResMut<HitTime>,
+    mut hp: ResMut<Hp>,
+    advantage: Res<Advantage>,
+) {
     if hit.0 && hit_time.0.elapsed().as_millis() > 300 {
-        hp.0 -= 1;
+        let bite_strength = if matches!(
+            advantage.as_ref(),
+            Advantage::Enemy(EnemyAdvantage::DoubleBite)
+        ) {
+            3
+        } else {
+            1
+        };
+        hp.0 -= bite_strength;
         hit_time.0 = Instant::now();
     }
 }
