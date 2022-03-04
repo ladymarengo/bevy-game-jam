@@ -48,6 +48,8 @@ fn main() {
         .add_startup_system(spawn_hud)
         .add_system(update_hp_meter)
         .add_system(update_advantage)
+        .add_startup_system(spawn_stars)
+        // .add_system_to_stage(CoreStage::PostUpdate, delete_stars)
         .run()
 }
 
@@ -73,6 +75,10 @@ fn check_collisions(
     player: Query<Entity, With<player::Player>>,
     enemy: Query<Entity, With<enemy::Enemy>>,
     mut hit_time: ResMut<HitTime>,
+    stars: Query<Entity, With<Star>>,
+    mut commands: Commands,
+    mut hp: ResMut<Hp>,
+    adv: Res<Advantage>,
 ) {
     let id = player.single();
     for event in events.iter() {
@@ -86,6 +92,10 @@ fn check_collisions(
                     &mut hit,
                     "started",
                     &mut hit_time,
+                    &stars,
+                    &mut commands,
+                    &mut hp,
+                    &adv,
                 );
             }
             CollisionEvent::Started(other_c, player_c) if player_c.rigid_body_entity() == id => {
@@ -97,6 +107,10 @@ fn check_collisions(
                     &mut hit,
                     "started",
                     &mut hit_time,
+                    &stars,
+                    &mut commands,
+                    &mut hp,
+                    &adv,
                 );
             }
             CollisionEvent::Stopped(player_c, other_c) if player_c.rigid_body_entity() == id => {
@@ -108,6 +122,10 @@ fn check_collisions(
                     &mut hit,
                     "stopped",
                     &mut hit_time,
+                    &stars,
+                    &mut commands,
+                    &mut hp,
+                    &adv,
                 );
             }
             CollisionEvent::Stopped(other_c, player_c) if player_c.rigid_body_entity() == id => {
@@ -119,6 +137,10 @@ fn check_collisions(
                     &mut hit,
                     "stopped",
                     &mut hit_time,
+                    &stars,
+                    &mut commands,
+                    &mut hp,
+                    &adv,
                 );
             }
             _ => (),
@@ -134,6 +156,10 @@ fn handle_player_collision(
     hit: &mut ResMut<Hit>,
     state: &str,
     hit_time: &mut ResMut<HitTime>,
+    stars: &Query<Entity, With<Star>>,
+    commands: &mut Commands,
+    hp: &mut ResMut<Hp>,
+    adv: &Res<Advantage>,
 ) {
     if player.normals().iter().any(|normal| normal.y >= 0.9) {
         jump.0 = 0;
@@ -149,6 +175,21 @@ fn handle_player_collision(
                 hit.0 = false;
                 // println!("stopped");
             }
+        }
+    }
+
+    for star in stars.iter() {
+        if other.rigid_body_entity() == star {
+            if matches!(
+                adv.as_ref(),
+                Advantage::Player(advantage::PlayerAdvantage::DoubleInitialHp)
+            ) {
+                hp.0 += 2;
+            } else {
+                hp.0 += 1;
+            };
+            
+            commands.entity(star).despawn();
         }
     }
 }
@@ -199,4 +240,35 @@ fn cameraman(
             info!("Querying camera errored with {:?}", e);
         }
     }
+}
+
+#[derive(Component)]
+pub struct Star;
+
+fn spawn_stars(mut commands: Commands) {
+    commands
+        .spawn_bundle(SpriteBundle {
+            transform: Transform {
+                translation: Vec3::new(tilemap::TILE_SIZE as f32 * 20.0,
+                    tilemap::TILE_SIZE as f32 * 32.0,
+                    4.0,),
+                scale: Vec3::new(10.0, 10.0, 0.0),
+                ..Default::default()
+            },
+            sprite: Sprite {
+                color: Color::rgb(1.0, 0.0, 0.0),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(Star)
+        .insert(RigidBody::Static)
+        .with_children(|children| {
+            children.spawn_bundle((
+                SensorShape,
+                CollisionShape::Sphere {
+                    radius: 5.0,
+                },
+            ));
+        });
 }
