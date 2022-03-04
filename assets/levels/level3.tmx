@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.8" tiledversion="1.8.2" orientation="orthogonal" renderorder="right-down" width="200" height="50" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="20">
+<map version="1.8" tiledversion="1.8.2" orientation="orthogonal" renderorder="right-down" width="200" height="50" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="21">
  <tileset firstgid="1" name="terrain" tilewidth="16" tileheight="16" tilecount="48" columns="16">
   <image source="../terrain.png" width="256" height="48"/>
  </tileset>
@@ -144,6 +144,7 @@
    <point/>
   </object>
   <object id="19" x="480" y="888"/>
+  <object id="20" name="goal" type="goal" x="2895" y="286" width="83" height="101"/>
  </objectgroup>
  <layer id="5" name="wall" width="200" height="50" locked="1">
   <data encoding="csv">
