@@ -2,7 +2,7 @@ use advantage::{Advantage, EnemyAdvantage};
 use benimator::*;
 use bevy::prelude::*;
 use heron::*;
-use hud::{spawn_hud, update_advantage, update_hp_meter};
+use hud::{spawn_hud, update_advantage, update_hp_meter, fade_out_hint};
 use instant::Instant;
 use std::time::Duration;
 
@@ -46,10 +46,11 @@ fn main() {
         .add_system(enemy::r#move)
         .add_system(cameraman)
         .add_system(check_hits)
+        // HUD
         .add_startup_system(spawn_hud)
         .add_system(update_hp_meter)
         .add_system(update_advantage)
-        // .add_system_to_stage(CoreStage::PostUpdate, delete_stars)
+        .add_system(fade_out_hint)
         .run()
 }
 
