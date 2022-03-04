@@ -118,7 +118,7 @@ pub fn enemy_move(
 ) {
     let player = player.single();
     let enemy_speed = if matches!(
-        adv.into_inner(),
+        adv.as_ref(),
         Advantage::Enemy(EnemyAdvantage::DoubleSpeed)
     ) {
         200.0
