@@ -372,17 +372,27 @@ fn spawn_stars(
 }
 
 fn on_die(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn_bundle(SpriteBundle {
+        sprite: Sprite {
+            color: Color::BLACK,
+            custom_size: Some(Vec2::new(10000.0, 10000.0)),
+            ..Default::default()
+        },
+        transform:  Transform::from_translation(Vec3::new(0.0, 0.0, 100.0)),
+        ..Default::default()
+    });
     commands.spawn_bundle(TextBundle {
         style: Style {
-            size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+            position_type: PositionType::Absolute,
+            size: Size::new(Val::Percent(50.0), Val::Percent(50.0)),
             ..Default::default()
         },
         text: Text::with_section(
             "You died",
             TextStyle {
                 font: asset_server.load("PublicPixel-0W6DP.ttf"),
-                font_size: 18.0,
-                color: Color::GOLD,
+                font_size: 30.0,
+                color: Color::RED,
             },
             TextAlignment {
                 vertical: VerticalAlign::Center,
@@ -394,17 +404,29 @@ fn on_die(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn on_win(mut commands: Commands, asset_server: Res<AssetServer>) {
+
+    commands.spawn_bundle(SpriteBundle {
+        sprite: Sprite {
+            color: Color::BEIGE,
+            custom_size: Some(Vec2::new(10000.0, 10000.0)),
+            ..Default::default()
+        },
+        transform:  Transform::from_translation(Vec3::new(0.0, 0.0, 100.0)),
+        ..Default::default()
+    });
+    
     commands.spawn_bundle(TextBundle {
         style: Style {
-            size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+            position_type: PositionType::Absolute,
+            size: Size::new(Val::Percent(50.0), Val::Percent(50.0)),
             ..Default::default()
         },
         text: Text::with_section(
             "You won",
             TextStyle {
                 font: asset_server.load("PublicPixel-0W6DP.ttf"),
-                font_size: 18.0,
-                color: Color::GOLD,
+                font_size: 30.0,
+                color: Color::LIME_GREEN,
             },
             TextAlignment {
                 vertical: VerticalAlign::Center,
