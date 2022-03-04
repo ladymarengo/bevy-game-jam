@@ -11,6 +11,7 @@ const COLLISION_LAYER_NAME: &str = "collision";
 const OBJ_TYPE_PLAYER_START: &str = "player_start";
 const OBJ_TYPE_ANGLERFISH: &str = "anglerfish";
 const OBJ_TYPE_SAWFISH: &str = "sawfish";
+const OBJ_TYPE_STAR: &str = "star";
 
 const TILESET_WIDTH: usize = 16;
 const TILESET_HEIGHT: usize = 5;
@@ -195,6 +196,14 @@ fn load_map(
                     animation_handles,
                     position_tmx_to_world(&map, object),
                 );
+            } else if object.obj_type == OBJ_TYPE_STAR {
+                crate::spawn_stars(
+                    commands,
+                    asset_server,
+                    position_tmx_to_world(&map, object),
+                    texture_atlases,
+                    animations,
+                );
             }
         }
     }
@@ -217,8 +226,8 @@ fn create_tile_sprite(
     has_collision: bool,
 ) {
     let position = Vec2::new(
-        (col * TILE_SIZE) as f32,
-        ((height - row - 1) * TILE_SIZE) as f32,
+        (col * TILE_SIZE) as f32 + (TILE_SIZE as f32 / 2.0),
+        ((height - row) * TILE_SIZE) as f32 - (TILE_SIZE as f32 / 2.0),
     );
     let mut entity = commands.spawn_bundle(SpriteSheetBundle {
         texture_atlas: texture_atlas_handle.clone(),
@@ -240,8 +249,10 @@ fn create_tile_sprite(
 }
 
 fn position_tmx_to_world(map: &tiled::Map, object: &tiled::Object) -> Vec2 {
+    let map_height = (map.height * (TILE_SIZE as u32)) as f32;
+
     Vec2::new(
-        object.x,
-        (map.height * TILE_SIZE as u32) as f32 - object.y + object.height,
+        object.x + (object.width / 2.0),
+        map_height - object.y - (object.height / 2.0),
     )
 }

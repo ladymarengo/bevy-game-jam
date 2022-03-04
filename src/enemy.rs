@@ -249,14 +249,14 @@ pub fn r#move(
                     }
                     *direction = Direction::Right
                 }
-                -150..=0 => {
+                -70..=0 => {
                     match *fishtype {
                         FishType::Anglerfish => *animation = animations.a_left.clone(),
                         FishType::Sawfish => *animation = animations.s_left.clone(),
                     }
                     *direction = Direction::Left
                 }
-                1..=150 => {
+                1..=70 => {
                     match *fishtype {
                         FishType::Anglerfish => *animation = animations.a_right.clone(),
                         FishType::Sawfish => *animation = animations.s_right.clone(),
