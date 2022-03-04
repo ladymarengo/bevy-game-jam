@@ -1,4 +1,3 @@
 # bevy-game-jam
 
-## Development
-While developing for quick recompilation it is recommended to try the game using `cargo run --features bevy/dynamic` (does not work on Windows)
+Fun small platformer for Bevy Jam #1 made by me, [kolen](https://github.com/kolen) and [samoylovfp](https://github.com/samoylovfp).
