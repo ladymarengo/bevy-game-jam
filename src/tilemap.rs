@@ -1,3 +1,4 @@
+use benimator::*;
 use bevy::prelude::*;
 use heron::*;
 
@@ -7,6 +8,7 @@ const TILESET_ASSET: &str = "terrain.png";
 static TILEMAPS_TMX: [&[u8]; 1] = [include_bytes!("../assets/levels/level1.tmx")];
 
 const COLLISION_LAYER_NAME: &str = "collision";
+const OBJ_TYPE_PLAYER_START: &str = "player_start";
 
 const TILESET_WIDTH: usize = 16;
 const TILESET_HEIGHT: usize = 5;
@@ -38,7 +40,7 @@ impl CollisionTiles {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct Map {
     pub width: usize,
     pub height: usize,
@@ -69,8 +71,15 @@ pub fn load_initial_map(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut animations: ResMut<Assets<SpriteSheetAnimation>>,
 ) {
-    load_map(&mut commands, &asset_server, &mut texture_atlases, 0);
+    load_map(
+        &mut commands,
+        &asset_server,
+        &mut texture_atlases,
+        &mut animations,
+        0,
+    );
 }
 
 pub fn change_map(
@@ -78,16 +87,18 @@ pub fn change_map(
     map_query: &Query<Entity, With<Map>>,
     asset_server: &Res<AssetServer>,
     texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+    animations: &mut ResMut<Assets<SpriteSheetAnimation>>,
     index: usize,
 ) {
     clear_map(commands, map_query);
-    load_map(commands, asset_server, texture_atlases, index);
+    load_map(commands, asset_server, texture_atlases, animations, index);
 }
 
 fn load_map(
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
     texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+    animations: &mut ResMut<Assets<SpriteSheetAnimation>>,
     index: usize,
 ) {
     let map = tiled::parse(TILEMAPS_TMX[index]).unwrap();
@@ -135,6 +146,20 @@ fn load_map(
             }
         } else {
             unimplemented!();
+        }
+    }
+
+    for object_group in map.object_groups {
+        for object in object_group.objects {
+            if object.obj_type == OBJ_TYPE_PLAYER_START {
+                crate::player::spawn(
+                    commands,
+                    &asset_server,
+                    texture_atlases,
+                    animations,
+                    Vec2::new(object.x, object.y),
+                );
+            }
         }
     }
 

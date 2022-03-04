@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.8" tiledversion="1.8.1" orientation="orthogonal" renderorder="right-down" width="64" height="32" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="1">
+<map version="1.8" tiledversion="1.8.2" orientation="orthogonal" renderorder="right-down" width="64" height="32" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="13">
  <tileset firstgid="1" name="terrain" tilewidth="16" tileheight="16" tilecount="48" columns="16">
   <image source="terrain.png" width="256" height="48"/>
  </tileset>
@@ -111,4 +111,28 @@
 18,17,17,17,18,18,18,18,18,18,18,17,17,17,17,18,17,17,17,17,18,17,18,18,17,17,17,17,17,17,17,18,17,17,17,18,18,17,18,17,17,18,18,17,18,17,17,17,17,17,18,18,18,17,17,18,18,17,18,17,17,17,18,17
 </data>
  </layer>
+ <objectgroup id="4" name="objects">
+  <object id="6" type="anglerfish" x="504" y="93" width="64" height="64">
+   <properties>
+    <property name="advantage" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="9" type="anglerfish" x="900" y="302" width="64" height="64">
+   <properties>
+    <property name="advantage" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="7" type="anglerfish" x="632" y="188" width="64" height="64">
+   <properties>
+    <property name="advantage" type="bool" value="false"/>
+   </properties>
+  </object>
+  <object id="8" type="anglerfish" x="255" y="335" width="64" height="64">
+   <properties>
+    <property name="advantage" type="bool" value="false"/>
+   </properties>
+  </object>
+  <object id="10" name="player_start" type="player_start" x="60" y="367" width="32" height="32"/>
+  <object id="12" name="goal" type="goal" x="915" y="220" width="90" height="147"/>
+ </objectgroup>
 </map>

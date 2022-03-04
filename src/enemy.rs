@@ -1,4 +1,5 @@
-use super::{Player, Hit};
+use super::Hit;
+use crate::player::Player;
 use benimator::*;
 use bevy::prelude::*;
 use heron::*;

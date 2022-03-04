@@ -2,17 +2,10 @@ use benimator::*;
 use bevy::prelude::*;
 use heron::*;
 use instant::Instant;
-use std::time::Duration;
-
-mod tilemap;
 
 mod enemy;
-
-#[derive(Component)]
-pub struct Player;
-
-#[derive(Default)]
-struct Jump(bool);
+mod player;
+mod tilemap;
 
 #[derive(Default)]
 pub struct Hit(bool);
@@ -29,14 +22,13 @@ fn main() {
         .add_plugin(AnimationPlugin::default())
         .add_system(bevy::input::system::exit_on_esc_system)
         .insert_resource(Gravity::from(Vec2::new(0.0, -2000.0)))
-        .insert_resource(Jump(false))
+        .insert_resource(player::Jump(false))
         .insert_resource(Hit(false))
         .insert_resource(HitTime(Instant::now()))
         .add_startup_system(init)
-        .add_startup_system(spawn_player)
         .add_startup_system(set_window_resolution)
         .add_startup_system(tilemap::load_initial_map)
-        .add_system(player_move)
+        .add_system(player::r#move)
         .add_system(check_collisions)
         .add_startup_system(enemy::spawn_enemy)
         .add_system(enemy::enemy_move)
@@ -60,83 +52,11 @@ fn set_window_resolution(mut windows: ResMut<Windows>) {
         .set_resolution(256.0 * PIXEL_MULTIPLIER, 215.0 * PIXEL_MULTIPLIER);
 }
 
-fn spawn_player(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    mut animations: ResMut<Assets<SpriteSheetAnimation>>,
-) {
-    let texture = asset_server.load("ferris-Sheet.png");
-    let texture_atlas = TextureAtlas::from_grid(texture, Vec2::new(32.0, 32.0), 4, 1);
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
-
-    let animation_handle = animations.add(SpriteSheetAnimation::from_range(
-        0..=3,
-        Duration::from_millis(100),
-    ));
-
-    commands
-        .spawn_bundle(SpriteSheetBundle {
-            texture_atlas: texture_atlas_handle.clone(),
-            sprite: TextureAtlasSprite {
-                index: 0,
-                ..Default::default()
-            },
-            transform: Transform::from_translation(Vec3::new(150.0, 230.0, 5.0)),
-            ..Default::default()
-        })
-        .insert(RigidBody::Dynamic)
-        .insert(CollisionShape::Cuboid {
-            half_extends: Vec3::new(32.0 / 2.0, 16.0 / 2.0, 0.0),
-            border_radius: None,
-        })
-        .insert(Velocity::from(Vec3::new(0.0, 0.0, 0.0)))
-        .insert(RotationConstraints::lock())
-        .insert(PhysicMaterial {
-            restitution: 0.2,
-            ..Default::default()
-        })
-        .insert(Player)
-        .insert(animation_handle)
-        .insert(Play);
-}
-
-fn player_move(
-    mut commands: Commands,
-    mut player: Query<(Entity, &mut Velocity), With<Player>>,
-    keys: Res<Input<KeyCode>>,
-    mut jump: ResMut<Jump>,
-) {
-    let (id, mut player) = player.single_mut();
-
-    commands.entity(id).remove::<Play>();
-
-    if keys.pressed(KeyCode::W) && !jump.0 {
-        player.linear[1] = 800.0;
-        jump.0 = true;
-    }
-    if keys.pressed(KeyCode::A) {
-        player.linear[0] = -200.0;
-        if !jump.0 {
-            commands.entity(id).insert(Play);
-        }
-    }
-    if keys.pressed(KeyCode::D) {
-        player.linear[0] = 200.0;
-        if !jump.0 {
-            commands.entity(id).insert(Play);
-        }
-    }
-    if keys.pressed(KeyCode::S) {
-        player.linear[1] = -500.0;
-    }
-}
-
 fn check_collisions(
     mut events: EventReader<CollisionEvent>,
-    mut jump: ResMut<Jump>,
+    mut jump: ResMut<player::Jump>,
     mut hit: ResMut<Hit>,
-    player: Query<Entity, With<Player>>,
+    player: Query<Entity, With<player::Player>>,
     enemy: Query<Entity, With<enemy::Enemy>>,
     mut hit_time: ResMut<HitTime>,
 ) {
@@ -195,7 +115,7 @@ fn check_collisions(
 fn handle_player_collision(
     player: &CollisionData,
     other: &CollisionData,
-    jump: &mut ResMut<Jump>,
+    jump: &mut ResMut<player::Jump>,
     enemy: &Query<Entity, With<enemy::Enemy>>,
     hit: &mut ResMut<Hit>,
     state: &str,
@@ -230,7 +150,7 @@ fn check_hits(hit: ResMut<Hit>, mut hit_time: ResMut<HitTime>) {
 fn cameraman(
     mut position_queries: QuerySet<(
         QueryState<&mut Transform, With<Camera>>,
-        QueryState<&Transform, With<Player>>,
+        QueryState<&Transform, With<player::Player>>,
     )>,
 ) {
     let player_pos = {
