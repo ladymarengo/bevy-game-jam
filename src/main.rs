@@ -1,18 +1,25 @@
 use benimator::*;
 use bevy::prelude::*;
 use heron::*;
+use hud::{spawn_hp_meter, update_hp_meter};
 use instant::Instant;
 
-mod enemy;
 mod player;
+mod enemy;
+mod hud;
 mod tilemap;
+
+#[derive(Component)]
+struct MainCamera;
 
 #[derive(Default)]
 pub struct Hit(bool);
 
 pub struct HitTime(Instant);
 
-const PIXEL_MULTIPLIER: f32 = 4.0;
+pub struct Hp(pub u8);
+
+const PIXEL_MULTIPLIER: f32 = 3.0;
 
 fn main() {
     App::new()
@@ -21,10 +28,12 @@ fn main() {
         .add_plugin(PhysicsPlugin::default())
         .add_plugin(AnimationPlugin::default())
         .add_system(bevy::input::system::exit_on_esc_system)
-        .insert_resource(Gravity::from(Vec2::new(0.0, -2000.0)))
+        .insert_resource(ClearColor(Color::hex("29366f").unwrap()))
+        .insert_resource(Gravity::from(Vec2::new(0.0, -1500.0)))
         .insert_resource(player::Jump(false))
         .insert_resource(Hit(false))
         .insert_resource(HitTime(Instant::now()))
+        .insert_resource(Hp(20))
         .add_startup_system(init)
         .add_startup_system(set_window_resolution)
         .add_startup_system(tilemap::load_initial_map)
@@ -34,6 +43,8 @@ fn main() {
         .add_system(enemy::enemy_move)
         .add_system(cameraman)
         .add_system(check_hits)
+        .add_startup_system(spawn_hp_meter)
+        .add_system(update_hp_meter)
         .run()
 }
 
@@ -42,14 +53,14 @@ fn init(mut commands: Commands) {
     camera_bundle.orthographic_projection.scale = 1.0 / PIXEL_MULTIPLIER;
     camera_bundle.transform.translation.x = tilemap::TILE_SIZE as f32 * 8.0;
     camera_bundle.transform.translation.y = tilemap::TILE_SIZE as f32 * 11.0;
-    commands.spawn_bundle(camera_bundle);
+    commands.spawn_bundle(camera_bundle).insert(MainCamera);
 }
 
 fn set_window_resolution(mut windows: ResMut<Windows>) {
     windows
         .get_primary_mut()
         .unwrap()
-        .set_resolution(256.0 * PIXEL_MULTIPLIER, 215.0 * PIXEL_MULTIPLIER);
+        .set_resolution(341.0 * PIXEL_MULTIPLIER, 256.0 * PIXEL_MULTIPLIER);
 }
 
 fn check_collisions(
@@ -139,9 +150,9 @@ fn handle_player_collision(
     }
 }
 
-fn check_hits(hit: ResMut<Hit>, mut hit_time: ResMut<HitTime>) {
+fn check_hits(hit: ResMut<Hit>, mut hit_time: ResMut<HitTime>, mut hp: ResMut<Hp>) {
     if hit.0 && hit_time.0.elapsed().as_millis() > 300 {
-        println!("hit");
+        hp.0 -= 1;
         hit_time.0 = Instant::now();
     }
 }
@@ -149,7 +160,7 @@ fn check_hits(hit: ResMut<Hit>, mut hit_time: ResMut<HitTime>) {
 #[allow(clippy::type_complexity)]
 fn cameraman(
     mut position_queries: QuerySet<(
-        QueryState<&mut Transform, With<Camera>>,
+        QueryState<&mut Transform, With<MainCamera>>,
         QueryState<&Transform, With<player::Player>>,
     )>,
 ) {

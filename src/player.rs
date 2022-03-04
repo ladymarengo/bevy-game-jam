@@ -62,7 +62,7 @@ pub fn r#move(
     commands.entity(id).remove::<Play>();
 
     if keys.pressed(KeyCode::W) && !jump.0 {
-        player.linear[1] = 800.0;
+        player.linear[1] = 600.0;
         jump.0 = true;
     }
     if keys.pressed(KeyCode::A) {
@@ -78,6 +78,6 @@ pub fn r#move(
         }
     }
     if keys.pressed(KeyCode::S) {
-        player.linear[1] = -500.0;
+        player.linear[1] = -400.0;
     }
 }

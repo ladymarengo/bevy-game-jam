@@ -5,7 +5,7 @@ use heron::*;
 pub const TILE_SIZE: usize = 16;
 
 const TILESET_ASSET: &str = "terrain.png";
-static TILEMAPS_TMX: [&[u8]; 1] = [include_bytes!("../assets/levels/level1.tmx")];
+static TILEMAPS_TMX: [&[u8]; 1] = [include_bytes!("../assets/levels/level3.tmx")];
 
 const COLLISION_LAYER_NAME: &str = "collision";
 const OBJ_TYPE_PLAYER_START: &str = "player_start";
@@ -119,6 +119,9 @@ fn load_map(
     let mut layer_index = 0;
     for layer in map.layers {
         layer_index += 1;
+        if layer.name == "water" {
+            continue;
+        }
         let is_collision_layer = layer.name == COLLISION_LAYER_NAME;
         if let tiled::LayerData::Finite(tiles) = layer.tiles {
             for row in 0..height {
