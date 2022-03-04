@@ -2,13 +2,13 @@ use advantage::{Advantage, EnemyAdvantage};
 use benimator::*;
 use bevy::prelude::*;
 use heron::*;
-use hud::{spawn_hud, update_advantage, update_hp_meter};
+use hud::{spawn_hud, update_advantage, update_hp_meter, fade_out_hint};
 use instant::Instant;
 
-mod player;
 mod advantage;
 mod enemy;
 mod hud;
+mod player;
 mod tilemap;
 
 #[derive(Component)]
@@ -45,9 +45,11 @@ fn main() {
         .add_system(enemy::r#move)
         .add_system(cameraman)
         .add_system(check_hits)
+        // HUD
         .add_startup_system(spawn_hud)
         .add_system(update_hp_meter)
         .add_system(update_advantage)
+        .add_system(fade_out_hint)
         .add_startup_system(spawn_stars)
         // .add_system_to_stage(CoreStage::PostUpdate, delete_stars)
         .run()
@@ -247,9 +249,11 @@ fn spawn_stars(mut commands: Commands) {
     commands
         .spawn_bundle(SpriteBundle {
             transform: Transform {
-                translation: Vec3::new(tilemap::TILE_SIZE as f32 * 20.0,
+                translation: Vec3::new(
+                    tilemap::TILE_SIZE as f32 * 20.0,
                     tilemap::TILE_SIZE as f32 * 32.0,
-                    4.0,),
+                    4.0,
+                ),
                 scale: Vec3::new(10.0, 10.0, 0.0),
                 ..Default::default()
             },
@@ -262,11 +266,6 @@ fn spawn_stars(mut commands: Commands) {
         .insert(Star)
         .insert(RigidBody::Static)
         .with_children(|children| {
-            children.spawn_bundle((
-                SensorShape,
-                CollisionShape::Sphere {
-                    radius: 5.0,
-                },
-            ));
+            children.spawn_bundle((SensorShape, CollisionShape::Sphere { radius: 5.0 }));
         });
 }
