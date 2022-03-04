@@ -165,32 +165,30 @@ fn handle_player_collision(
         jump.0 = 0;
     }
 
-    for enemy in enemy.iter() {
-        if other.rigid_body_entity() == enemy {
-            if state == "started" {
-                hit.0 = true;
-                hit_time.0 = Instant::now();
-                // println!("started");
-            } else {
-                hit.0 = false;
-                // println!("stopped");
-            }
+    let other_entity = other.rigid_body_entity();
+
+    if enemy.get(other_entity).is_ok() {
+        if state == "started" {
+            hit.0 = true;
+            hit_time.0 = Instant::now();
+            // println!("started");
+        } else {
+            hit.0 = false;
+            // println!("stopped");
         }
     }
 
-    for star in stars.iter() {
-        if other.rigid_body_entity() == star {
-            if matches!(
-                adv.as_ref(),
-                Advantage::Player(advantage::PlayerAdvantage::DoubleInitialHp)
-            ) {
-                hp.0 += 2;
-            } else {
-                hp.0 += 1;
-            };
-            
-            commands.entity(star).despawn();
-        }
+    if stars.get(other_entity).is_ok() {
+        if matches!(
+            adv.as_ref(),
+            Advantage::Player(advantage::PlayerAdvantage::DoubleInitialHp)
+        ) {
+            hp.0 += 2;
+        } else {
+            hp.0 += 1;
+        };
+
+        commands.entity(other_entity).despawn();
     }
 }
 
