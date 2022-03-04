@@ -1,7 +1,8 @@
 use benimator::*;
 use bevy::prelude::*;
 use heron::*;
-use std::time::{Instant, Duration};
+use instant::Instant;
+use std::time::Duration;
 
 mod tilemap;
 
@@ -15,7 +16,6 @@ struct Jump(bool);
 
 #[derive(Default)]
 pub struct Hit(bool);
-
 
 pub struct HitTime(Instant);
 
@@ -144,16 +144,48 @@ fn check_collisions(
     for event in events.iter() {
         match event {
             CollisionEvent::Started(player_c, other_c) if player_c.rigid_body_entity() == id => {
-                handle_player_collision(player_c, other_c, &mut jump, &enemy, &mut hit, "started", &mut hit_time);
+                handle_player_collision(
+                    player_c,
+                    other_c,
+                    &mut jump,
+                    &enemy,
+                    &mut hit,
+                    "started",
+                    &mut hit_time,
+                );
             }
             CollisionEvent::Started(other_c, player_c) if player_c.rigid_body_entity() == id => {
-                handle_player_collision(player_c, other_c, &mut jump, &enemy, &mut hit, "started", &mut hit_time);
+                handle_player_collision(
+                    player_c,
+                    other_c,
+                    &mut jump,
+                    &enemy,
+                    &mut hit,
+                    "started",
+                    &mut hit_time,
+                );
             }
             CollisionEvent::Stopped(player_c, other_c) if player_c.rigid_body_entity() == id => {
-                handle_player_collision(player_c, other_c, &mut jump, &enemy, &mut hit, "stopped", &mut hit_time);
+                handle_player_collision(
+                    player_c,
+                    other_c,
+                    &mut jump,
+                    &enemy,
+                    &mut hit,
+                    "stopped",
+                    &mut hit_time,
+                );
             }
             CollisionEvent::Stopped(other_c, player_c) if player_c.rigid_body_entity() == id => {
-                handle_player_collision(player_c, other_c, &mut jump, &enemy, &mut hit, "stopped", &mut hit_time);
+                handle_player_collision(
+                    player_c,
+                    other_c,
+                    &mut jump,
+                    &enemy,
+                    &mut hit,
+                    "stopped",
+                    &mut hit_time,
+                );
             }
             _ => (),
         }
@@ -195,10 +227,11 @@ fn check_hits(hit: ResMut<Hit>, mut hit_time: ResMut<HitTime>) {
 }
 
 #[allow(clippy::type_complexity)]
-fn cameraman(mut position_queries: QuerySet<(
-    QueryState<&mut Transform, With<Camera>>,
-    QueryState<&Transform, With<Player>>,
-)>,
+fn cameraman(
+    mut position_queries: QuerySet<(
+        QueryState<&mut Transform, With<Camera>>,
+        QueryState<&Transform, With<Player>>,
+    )>,
 ) {
     let player_pos = {
         match position_queries.q1().get_single() {
@@ -219,5 +252,4 @@ fn cameraman(mut position_queries: QuerySet<(
             info!("Querying camera errored with {:?}", e);
         }
     }
-
 }
