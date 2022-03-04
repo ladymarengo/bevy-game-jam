@@ -152,6 +152,7 @@ fn load_map(
         }
     }
 
+    let mut has_player_start = false;
     for object_group in map.object_groups {
         for object in object_group.objects {
             if object.obj_type == OBJ_TYPE_PLAYER_START {
@@ -162,8 +163,12 @@ fn load_map(
                     animations,
                     Vec2::new(object.x, object.y),
                 );
+                has_player_start = true;
             }
         }
+    }
+    if !has_player_start {
+        panic!("player_start not found in level #{index}");
     }
 
     commands.insert_resource(collision_tiles);
