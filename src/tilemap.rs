@@ -58,17 +58,30 @@ fn create_tilemap_atlas(
     texture_atlases.add(texture_atlas)
 }
 
+fn clear_map(commands: &mut Commands, map_container_query: &Query<Entity, With<TilemapContainer>>) {
+    let map_container = map_container_query
+        .get_single()
+        .expect("Map must be loaded (and only single instance)");
+    commands.entity(map_container).despawn_recursive();
+}
+
 pub fn load_initial_map(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    load_map(
-        &mut commands,
-        &asset_server,
-        &mut texture_atlases,
-        0,
-    );
+    load_map(&mut commands, &asset_server, &mut texture_atlases, 0);
+}
+
+pub fn change_map(
+    commands: &mut Commands,
+    map_container_query: &Query<Entity, With<TilemapContainer>>,
+    asset_server: &Res<AssetServer>,
+    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+    index: usize,
+) {
+    clear_map(commands, map_container_query);
+    load_map(commands, asset_server, texture_atlases, index);
 }
 
 fn load_map(
