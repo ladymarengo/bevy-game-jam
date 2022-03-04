@@ -89,10 +89,6 @@ pub fn spawn_enemy(
                 },
             ));
         })
-        // .insert(CollisionShape::Cuboid {
-        //     half_extends: Vec3::new(20.0 / 2.0, 40.0 / 2.0, 0.0),
-        //     border_radius: None,
-        // })
         .insert(Velocity::from(Vec3::new(0.0, 0.0, 0.0)))
         .insert(RotationConstraints::lock())
         .insert(PhysicMaterial {
@@ -117,41 +113,44 @@ pub fn enemy_move(
     animations: Res<Animations>,
     hit: ResMut<Hit>,
 ) {
-    let (enemy_transform, mut enemy_vel, mut direction, mut animation) = enemy.single_mut();
     let player = player.single();
-    match *direction {
-        Direction::Left => enemy_vel.linear[0] = -100.0,
-        Direction::Right => enemy_vel.linear[0] = 100.0,
-    }
-    if enemy_transform.translation.x < 100.0 {
-        *animation = animations.right.clone();
-        *direction = Direction::Right;
-    } else if enemy_transform.translation.x > 300.0 {
-        *animation = animations.left.clone();
-        *direction = Direction::Left;
-    }
 
-    if player.translation.y - enemy_transform.translation.y > -70.0
-        && player.translation.y - enemy_transform.translation.y < 70.0
-    {
-        match (player.translation.x - enemy_transform.translation.x) as i32 {
-            -50..=0 if hit.0 => {
-                *animation = animations.bite_left.clone();
-                *direction = Direction::Left
+    for (enemy_transform, mut enemy_vel, mut direction, mut animation) in enemy.iter_mut() {
+    
+        match *direction {
+            Direction::Left => enemy_vel.linear[0] = -100.0,
+            Direction::Right => enemy_vel.linear[0] = 100.0,
+        }
+        if enemy_transform.translation.x < 100.0 {
+            *animation = animations.right.clone();
+            *direction = Direction::Right;
+        } else if enemy_transform.translation.x > 300.0 {
+            *animation = animations.left.clone();
+            *direction = Direction::Left;
+        }
+
+        if player.translation.y - enemy_transform.translation.y > -70.0
+            && player.translation.y - enemy_transform.translation.y < 70.0
+        {
+            match (player.translation.x - enemy_transform.translation.x) as i32 {
+                -50..=0 if hit.0 => {
+                    *animation = animations.bite_left.clone();
+                    *direction = Direction::Left
+                }
+                1..=50 if hit.0 => {
+                    *animation = animations.bite_right.clone();
+                    *direction = Direction::Right
+                }
+                -150..=0 => {
+                    *animation = animations.left.clone();
+                    *direction = Direction::Left
+                }
+                1..=150 => {
+                    *animation = animations.right.clone();
+                    *direction = Direction::Right
+                }
+                _ => (),
             }
-            1..=50 if hit.0 => {
-                *animation = animations.bite_right.clone();
-                *direction = Direction::Right
-            }
-            -150..=0 => {
-                *animation = animations.left.clone();
-                *direction = Direction::Left
-            }
-            1..=150 => {
-                *animation = animations.right.clone();
-                *direction = Direction::Right
-            }
-            _ => (),
         }
     }
 }
