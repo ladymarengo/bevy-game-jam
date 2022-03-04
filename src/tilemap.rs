@@ -217,8 +217,8 @@ fn create_tile_sprite(
     has_collision: bool,
 ) {
     let position = Vec2::new(
-        (col * TILE_SIZE) as f32,
-        ((height - row - 1) * TILE_SIZE) as f32,
+        (col * TILE_SIZE) as f32 + (TILE_SIZE as f32 / 2.0),
+        ((height - row) * TILE_SIZE) as f32 - (TILE_SIZE as f32 / 2.0),
     );
     let mut entity = commands.spawn_bundle(SpriteSheetBundle {
         texture_atlas: texture_atlas_handle.clone(),
@@ -240,8 +240,10 @@ fn create_tile_sprite(
 }
 
 fn position_tmx_to_world(map: &tiled::Map, object: &tiled::Object) -> Vec2 {
+    let map_height = (map.height * (TILE_SIZE as u32)) as f32;
+
     Vec2::new(
-        object.x,
-        (map.height * TILE_SIZE as u32) as f32 - object.y + object.height,
+        object.x + (object.width / 2.0),
+        map_height - object.y - (object.height / 2.0),
     )
 }
