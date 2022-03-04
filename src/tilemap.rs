@@ -199,7 +199,10 @@ fn load_map(
             } else if object.obj_type == OBJ_TYPE_STAR {
                 crate::spawn_stars(
                     commands,
+                    asset_server,
                     position_tmx_to_world(&map, object),
+                    texture_atlases,
+                    animations,
                 );
             }
         }
