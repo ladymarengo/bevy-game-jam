@@ -1,6 +1,6 @@
+use super::Hit;
 use crate::advantage::{Advantage, EnemyAdvantage};
-
-use super::{Hit, Player};
+use crate::player::Player;
 use benimator::*;
 use bevy::prelude::*;
 use heron::*;

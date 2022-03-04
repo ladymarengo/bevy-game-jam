@@ -1,3 +1,4 @@
+use benimator::*;
 use bevy::prelude::*;
 use heron::*;
 
@@ -7,6 +8,7 @@ const TILESET_ASSET: &str = "terrain.png";
 static TILEMAPS_TMX: [&[u8]; 1] = [include_bytes!("../assets/levels/level3.tmx")];
 
 const COLLISION_LAYER_NAME: &str = "collision";
+const OBJ_TYPE_PLAYER_START: &str = "player_start";
 
 const TILESET_WIDTH: usize = 16;
 const TILESET_HEIGHT: usize = 5;
@@ -38,8 +40,8 @@ impl CollisionTiles {
     }
 }
 
-#[derive(Component)]
-pub struct TilemapContainer {
+#[derive(Component, Debug)]
+pub struct Map {
     pub width: usize,
     pub height: usize,
 }
@@ -58,36 +60,45 @@ fn create_tilemap_atlas(
     texture_atlases.add(texture_atlas)
 }
 
-fn clear_map(commands: &mut Commands, map_container_query: &Query<Entity, With<TilemapContainer>>) {
-    let map_container = map_container_query
+fn clear_map(commands: &mut Commands, map_query: &Query<Entity, With<Map>>) {
+    let map = map_query
         .get_single()
         .expect("Map must be loaded (and only single instance)");
-    commands.entity(map_container).despawn_recursive();
+    commands.entity(map).despawn_recursive();
 }
 
 pub fn load_initial_map(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut animations: ResMut<Assets<SpriteSheetAnimation>>,
 ) {
-    load_map(&mut commands, &asset_server, &mut texture_atlases, 0);
+    load_map(
+        &mut commands,
+        &asset_server,
+        &mut texture_atlases,
+        &mut animations,
+        0,
+    );
 }
 
 pub fn change_map(
     commands: &mut Commands,
-    map_container_query: &Query<Entity, With<TilemapContainer>>,
+    map_query: &Query<Entity, With<Map>>,
     asset_server: &Res<AssetServer>,
     texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+    animations: &mut ResMut<Assets<SpriteSheetAnimation>>,
     index: usize,
 ) {
-    clear_map(commands, map_container_query);
-    load_map(commands, asset_server, texture_atlases, index);
+    clear_map(commands, map_query);
+    load_map(commands, asset_server, texture_atlases, animations, index);
 }
 
 fn load_map(
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
     texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
+    animations: &mut ResMut<Assets<SpriteSheetAnimation>>,
     index: usize,
 ) {
     let map = tiled::parse(TILEMAPS_TMX[index]).unwrap();
@@ -98,21 +109,21 @@ fn load_map(
     let width = map.width as usize;
     let height = map.height as usize;
 
-    let tilemap_container = commands
+    let map_entity = commands
         .spawn()
-        .insert(TilemapContainer { width, height })
+        .insert(Map { width, height })
         .insert(Transform::default())
         .insert(GlobalTransform::default())
         .id();
 
     let mut layer_index = 0;
-    for layer in map.layers {
+    for layer in &map.layers {
         layer_index += 1;
         if layer.name == "water" {
             continue;
         }
         let is_collision_layer = layer.name == COLLISION_LAYER_NAME;
-        if let tiled::LayerData::Finite(tiles) = layer.tiles {
+        if let tiled::LayerData::Finite(tiles) = &layer.tiles {
             for row in 0..height {
                 for col in 0..width {
                     let tile = tiles[row][col];
@@ -120,7 +131,7 @@ fn load_map(
                     if tile.gid != 0 {
                         create_tile_sprite(
                             commands,
-                            tilemap_container.clone(),
+                            map_entity.clone(),
                             texture_atlas_handle.clone(),
                             height,
                             row,
@@ -141,12 +152,31 @@ fn load_map(
         }
     }
 
+    let mut has_player_start = false;
+    for object_group in &map.object_groups {
+        for object in &object_group.objects {
+            if object.obj_type == OBJ_TYPE_PLAYER_START {
+                crate::player::spawn(
+                    commands,
+                    &asset_server,
+                    texture_atlases,
+                    animations,
+                    position_tmx_to_world(&map, object),
+                );
+                has_player_start = true;
+            }
+        }
+    }
+    if !has_player_start {
+        panic!("player_start not found in level #{index}");
+    }
+
     commands.insert_resource(collision_tiles);
 }
 
 fn create_tile_sprite(
     commands: &mut Commands,
-    tilemap_container: Entity,
+    map: Entity,
     texture_atlas_handle: Handle<TextureAtlas>,
     height: usize,
     row: usize,
@@ -168,7 +198,7 @@ fn create_tile_sprite(
         transform: Transform::from_xyz(position.x, position.y, order as f32),
         ..Default::default()
     });
-    entity.insert(Parent(tilemap_container));
+    entity.insert(Parent(map));
     if has_collision {
         entity.insert(RigidBody::Static);
         entity.insert(CollisionShape::Cuboid {
@@ -176,4 +206,11 @@ fn create_tile_sprite(
             border_radius: None,
         });
     }
+}
+
+fn position_tmx_to_world(map: &tiled::Map, object: &tiled::Object) -> Vec2 {
+    Vec2::new(
+        object.x,
+        (map.height * TILE_SIZE as u32) as f32 - object.y + object.height,
+    )
 }

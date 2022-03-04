@@ -4,8 +4,8 @@ use bevy::prelude::*;
 use heron::*;
 use hud::{spawn_hud, update_advantage, update_hp_meter};
 use instant::Instant;
-use std::time::Duration;
 
+mod player;
 mod advantage;
 mod enemy;
 mod hud;
@@ -13,13 +13,6 @@ mod tilemap;
 
 #[derive(Component)]
 struct MainCamera;
-
-#[derive(Component)]
-pub struct Player;
-
-/// Amount of jumps performed in current flight
-#[derive(Default)]
-struct Jump(u8);
 
 #[derive(Default)]
 pub struct Hit(bool);
@@ -39,16 +32,15 @@ fn main() {
         .add_system(bevy::input::system::exit_on_esc_system)
         .insert_resource(ClearColor(Color::hex("29366f").unwrap()))
         .insert_resource(Gravity::from(Vec2::new(0.0, -1500.0)))
-        .insert_resource(Jump(0))
+        .insert_resource(player::Jump(0))
         .insert_resource(Hit(false))
         .insert_resource(HitTime(Instant::now()))
         .insert_resource(Hp(20))
         .insert_resource(Advantage::random())
         .add_startup_system(init)
-        .add_startup_system(spawn_player)
         .add_startup_system(set_window_resolution)
         .add_startup_system(tilemap::load_initial_map)
-        .add_system(player_move)
+        .add_system(player::r#move)
         .add_system(check_collisions)
         .add_startup_system(enemy::spawn_enemy)
         .add_system(enemy::enemy_move)
@@ -75,102 +67,11 @@ fn set_window_resolution(mut windows: ResMut<Windows>) {
         .set_resolution(341.0 * PIXEL_MULTIPLIER, 256.0 * PIXEL_MULTIPLIER);
 }
 
-fn spawn_player(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-    mut animations: ResMut<Assets<SpriteSheetAnimation>>,
-) {
-    let texture = asset_server.load("ferris-Sheet.png");
-    let texture_atlas = TextureAtlas::from_grid(texture, Vec2::new(32.0, 32.0), 4, 1);
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
-
-    let animation_handle = animations.add(SpriteSheetAnimation::from_range(
-        0..=3,
-        Duration::from_millis(100),
-    ));
-
-    commands
-        .spawn_bundle(SpriteSheetBundle {
-            texture_atlas: texture_atlas_handle.clone(),
-            sprite: TextureAtlasSprite {
-                index: 0,
-                ..Default::default()
-            },
-            transform: Transform::from_translation(Vec3::new(
-                tilemap::TILE_SIZE as f32 * 16.0,
-                tilemap::TILE_SIZE as f32 * 35.0,
-                5.0,
-            )),
-            ..Default::default()
-        })
-        .insert(RigidBody::Dynamic)
-        .insert(CollisionShape::Cuboid {
-            half_extends: Vec3::new(32.0 / 2.0, 16.0 / 2.0, 0.0),
-            border_radius: None,
-        })
-        .insert(Velocity::from(Vec3::new(0.0, 0.0, 0.0)))
-        .insert(RotationConstraints::lock())
-        .insert(PhysicMaterial {
-            restitution: 0.2,
-            ..Default::default()
-        })
-        .insert(Player)
-        .insert(animation_handle)
-        .insert(Play);
-}
-
-fn player_move(
-    mut commands: Commands,
-    mut player: Query<(Entity, &mut Velocity), With<Player>>,
-    keys: Res<Input<KeyCode>>,
-    mut jump: ResMut<Jump>,
-    mut adv: ResMut<Advantage>,
-) {
-    let (id, mut player) = player.single_mut();
-    let max_jumps = if matches!(
-        adv.as_ref(),
-        Advantage::Player(advantage::PlayerAdvantage::DoubleJump)
-    ) {
-        2
-    } else {
-        1
-    };
-
-    commands.entity(id).remove::<Play>();
-    let can_jump = jump.0 < max_jumps;
-    let is_not_jumping = jump.0 == 0;
-
-    if keys.just_pressed(KeyCode::W) && can_jump {
-        player.linear[1] = 600.0;
-        jump.0 += 1;
-    }
-    if keys.pressed(KeyCode::A) {
-        player.linear[0] = -200.0;
-        if is_not_jumping {
-            commands.entity(id).insert(Play);
-        }
-    }
-    if keys.pressed(KeyCode::D) {
-        player.linear[0] = 200.0;
-        if is_not_jumping {
-            commands.entity(id).insert(Play);
-        }
-    }
-    if keys.pressed(KeyCode::S) {
-        player.linear[1] = -400.0;
-    }
-
-    if option_env!("CHEATS").is_some() && keys.just_pressed(KeyCode::R) {
-        *adv = Advantage::random();
-    }
-}
-
 fn check_collisions(
     mut events: EventReader<CollisionEvent>,
-    mut jump: ResMut<Jump>,
+    mut jump: ResMut<player::Jump>,
     mut hit: ResMut<Hit>,
-    player: Query<Entity, With<Player>>,
+    player: Query<Entity, With<player::Player>>,
     enemy: Query<Entity, With<enemy::Enemy>>,
     mut hit_time: ResMut<HitTime>,
 ) {
@@ -229,7 +130,7 @@ fn check_collisions(
 fn handle_player_collision(
     player: &CollisionData,
     other: &CollisionData,
-    jump: &mut ResMut<Jump>,
+    jump: &mut ResMut<player::Jump>,
     enemy: &Query<Entity, With<enemy::Enemy>>,
     hit: &mut ResMut<Hit>,
     state: &str,
@@ -277,7 +178,7 @@ fn check_hits(
 fn cameraman(
     mut position_queries: QuerySet<(
         QueryState<&mut Transform, With<MainCamera>>,
-        QueryState<&Transform, With<Player>>,
+        QueryState<&Transform, With<player::Player>>,
     )>,
 ) {
     let player_pos = {
