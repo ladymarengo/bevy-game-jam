@@ -8,11 +8,13 @@ pub const TILE_SIZE: usize = 16;
 const TILESET_ASSET: &str = "terrain.png";
 static TILEMAPS_TMX: &[&[u8]] = &[include_bytes!("../assets/levels/level3.tmx"), include_bytes!("../assets/levels/level2.tmx")];
 
+
 const COLLISION_LAYER_NAME: &str = "collision";
 const OBJ_TYPE_PLAYER_START: &str = "player_start";
 const OBJ_TYPE_ANGLERFISH: &str = "anglerfish";
 const OBJ_TYPE_SAWFISH: &str = "sawfish";
 const OBJ_TYPE_STAR: &str = "star";
+const OBJ_TYPE_GOAL: &str = "goal";
 
 const TILESET_WIDTH: usize = 16;
 const TILESET_HEIGHT: usize = 5;
@@ -48,6 +50,7 @@ impl CollisionTiles {
 pub struct Map {
     pub width: usize,
     pub height: usize,
+    pub index: usize,
 }
 
 fn create_tilemap_atlas(
@@ -64,11 +67,24 @@ fn create_tilemap_atlas(
     texture_atlases.add(texture_atlas)
 }
 
-fn clear_map(commands: &mut Commands, map_query: &Query<Entity, With<Map>>) {
+fn clear_map(
+    commands: &mut Commands,
+    map_query: &Query<Entity, With<Map>>,
+    player_query: &Query<Entity, With<crate::player::Player>>,
+    enemy_query: &Query<Entity, With<crate::enemy::Enemy>>,
+) {
     let map = map_query
         .get_single()
         .expect("Map must be loaded (and only single instance)");
     commands.entity(map).despawn_recursive();
+    for entity in player_query.iter() {
+        commands.entity(entity).despawn();
+    }
+    for entity in enemy_query.iter() {
+        commands.entity(entity).despawn();
+    }
+
+    info!("Cleared map");
 }
 
 pub fn load_initial_map(
@@ -97,9 +113,11 @@ pub fn change_map(
     texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
     animations: &mut ResMut<Assets<SpriteSheetAnimation>>,
     animation_handles: &mut ResMut<crate::enemy::Animations>,
+    player_query: &Query<Entity, With<crate::player::Player>>,
+    enemy_query: &Query<Entity, With<crate::enemy::Enemy>>,
     index: usize,
 ) {
-    clear_map(commands, map_query);
+    clear_map(commands, map_query, player_query, enemy_query);
     load_map(
         commands,
         asset_server,
@@ -128,7 +146,11 @@ fn load_map(
 
     let map_entity = commands
         .spawn()
-        .insert(Map { width, height })
+        .insert(Map {
+            width,
+            height,
+            index,
+        })
         .insert(Transform::default())
         .insert(GlobalTransform::default())
         .id();
@@ -207,6 +229,16 @@ fn load_map(
                     texture_atlases,
                     animations,
                 );
+            } else if object.obj_type == OBJ_TYPE_GOAL {
+                if let tiled::ObjectShape::Rect { width, height } = object.shape {
+                    crate::goal::spawn(
+                        commands,
+                        position_tmx_to_world(&map, object),
+                        Vec2::new(width, height),
+                    );
+                } else {
+                    panic!("Invalid goal shape, must be rectangle");
+                }
             }
         }
     }
@@ -215,6 +247,7 @@ fn load_map(
     }
 
     commands.insert_resource(collision_tiles);
+    info!("Loaded map {}", index);
 }
 
 fn create_tile_sprite(
