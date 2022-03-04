@@ -245,8 +245,8 @@ fn cameraman(
 
     match position_queries.q0().get_single_mut() {
         Ok(mut c) => {
-            c.translation.x = player_pos.x;
-            // c.translation.y = player_pos.y;
+            c.translation.x = player_pos.x.round();
+            c.translation.y = player_pos.y.round();
         }
         Err(e) => {
             info!("Querying camera errored with {:?}", e);
