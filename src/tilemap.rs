@@ -4,7 +4,9 @@ use heron::*;
 pub const TILE_SIZE: usize = 16;
 
 const TILESET_ASSET: &str = "terrain.png";
-const TILEMAP_TMX: &[u8] = include_bytes!("../assets/terrain.tmx");
+static TILEMAPS_TMX: [&[u8]; 1] = [
+    include_bytes!("../assets/levels/level1.tmx")
+];
 
 const COLLISION_LAYER_NAME: &str = "collision";
 
@@ -49,7 +51,7 @@ pub fn load_map(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    let map = tiled::parse(TILEMAP_TMX).unwrap();
+    let map = tiled::parse(TILEMAPS_TMX[0]).unwrap();
     let texture = asset_server.load(TILESET_ASSET);
     let texture_atlas = TextureAtlas::from_grid(
         texture,
