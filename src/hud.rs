@@ -42,5 +42,10 @@ pub fn spawn_hp_meter(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 pub fn update_hp_meter(mut hp_label: Query<&mut Text, With<HpLabel>>, hp: Res<Hp>) {
-    hp_label.single_mut().sections[0].value = format!("hp {}", hp.0);
+    let section = &mut hp_label.single_mut().sections[0];
+    section.value = format!("hp {}", hp.0);
+    section.style.color = match hp.0 {
+        0..=9 => Color::RED,
+        _ => Color::WHITE
+    };
 }
