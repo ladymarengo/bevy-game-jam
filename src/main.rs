@@ -1,10 +1,12 @@
+use advantage::Advantage;
 use benimator::*;
 use bevy::prelude::*;
 use heron::*;
-use hud::{spawn_hp_meter, update_hp_meter};
+use hud::{spawn_hud, update_hp_meter, update_advantage};
 use instant::Instant;
 use std::time::Duration;
 
+mod advantage;
 mod enemy;
 mod hud;
 mod tilemap;
@@ -40,6 +42,7 @@ fn main() {
         .insert_resource(Hit(false))
         .insert_resource(HitTime(Instant::now()))
         .insert_resource(Hp(20))
+        .insert_resource(Advantage::random())
         .add_startup_system(init)
         .add_startup_system(spawn_player)
         .add_startup_system(set_window_resolution)
@@ -50,8 +53,9 @@ fn main() {
         .add_system(enemy::enemy_move)
         .add_system(cameraman)
         .add_system(check_hits)
-        .add_startup_system(spawn_hp_meter)
+        .add_startup_system(spawn_hud)
         .add_system(update_hp_meter)
+        .add_system(update_advantage)
         .run()
 }
 
@@ -92,7 +96,11 @@ fn spawn_player(
                 index: 0,
                 ..Default::default()
             },
-            transform: Transform::from_translation(Vec3::new(tilemap::TILE_SIZE as f32 * 16.0, tilemap::TILE_SIZE as f32 * 35.0, 5.0)),
+            transform: Transform::from_translation(Vec3::new(
+                tilemap::TILE_SIZE as f32 * 16.0,
+                tilemap::TILE_SIZE as f32 * 35.0,
+                5.0,
+            )),
             ..Default::default()
         })
         .insert(RigidBody::Dynamic)
