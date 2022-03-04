@@ -60,8 +60,12 @@ fn main() {
                 .with_system(check_hits)
         )
         .add_system_set(
-            SystemSet::on_update(AppState::Died)
-                .with_system(died)
+            SystemSet::on_enter(AppState::Died)
+                .with_system(on_die)
+        )
+        .add_system_set(
+            SystemSet::on_enter(AppState::Won)
+                .with_system(on_win)
         )
 
         // HUD
@@ -109,6 +113,7 @@ fn check_collisions(
     mut commands: Commands,
     mut hp: ResMut<Hp>,
     adv: Res<Advantage>,
+    mut app_state: ResMut<State<AppState>>
 ) {
     let id = player.single();
     for event in events.iter() {
@@ -129,6 +134,7 @@ fn check_collisions(
                     &mut commands,
                     &mut hp,
                     &adv,
+                    &mut app_state,
                 );
             }
             CollisionEvent::Started(other_c, player_c) if player_c.rigid_body_entity() == id => {
@@ -147,6 +153,7 @@ fn check_collisions(
                     &mut commands,
                     &mut hp,
                     &adv,
+                    &mut app_state,
                 );
             }
             CollisionEvent::Stopped(player_c, other_c) if player_c.rigid_body_entity() == id => {
@@ -165,6 +172,7 @@ fn check_collisions(
                     &mut commands,
                     &mut hp,
                     &adv,
+                    &mut app_state,
                 );
             }
             CollisionEvent::Stopped(other_c, player_c) if player_c.rigid_body_entity() == id => {
@@ -183,6 +191,7 @@ fn check_collisions(
                     &mut commands,
                     &mut hp,
                     &adv,
+                    &mut app_state,
                 );
             }
             _ => (),
@@ -213,6 +222,7 @@ fn handle_player_collision(
     commands: &mut Commands,
     hp: &mut ResMut<Hp>,
     adv: &Res<Advantage>,
+    app_state: &mut ResMut<State<AppState>>
 ) {
     if player.normals().iter().any(|normal| normal.y >= 0.9) {
         jump.0 = 0;
@@ -247,6 +257,8 @@ fn handle_player_collision(
     if goals.get(other_entity).is_ok() {
         let map_component = map.single();
         info!("Goal reached, changing map to {}", map_component.index + 1);
+
+        app_state.set(AppState::Won).unwrap();
 
         // TODO: changing map does not work, hangs
 
@@ -359,5 +371,46 @@ fn spawn_stars(
         });
 }
 
-fn died() {
+fn on_die(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn_bundle(TextBundle {
+        style: Style {
+            size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+            ..Default::default()
+        },
+        text: Text::with_section(
+            "You died",
+            TextStyle {
+                font: asset_server.load("PublicPixel-0W6DP.ttf"),
+                font_size: 18.0,
+                color: Color::GOLD,
+            },
+            TextAlignment {
+                vertical: VerticalAlign::Center,
+                horizontal: HorizontalAlign::Center,
+            },
+        ),
+        ..Default::default()
+    });
+}
+
+fn on_win(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn_bundle(TextBundle {
+        style: Style {
+            size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+            ..Default::default()
+        },
+        text: Text::with_section(
+            "You won",
+            TextStyle {
+                font: asset_server.load("PublicPixel-0W6DP.ttf"),
+                font_size: 18.0,
+                color: Color::GOLD,
+            },
+            TextAlignment {
+                vertical: VerticalAlign::Center,
+                horizontal: HorizontalAlign::Center,
+            },
+        ),
+        ..Default::default()
+    });
 }
