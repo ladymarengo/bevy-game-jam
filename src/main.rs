@@ -1,12 +1,16 @@
 use benimator::*;
 use bevy::prelude::*;
 use heron::*;
+use hud::{spawn_hp_meter, update_hp_meter};
 use instant::Instant;
 use std::time::Duration;
 
+mod enemy;
+mod hud;
 mod tilemap;
 
-mod enemy;
+#[derive(Component)]
+struct MainCamera;
 
 #[derive(Component)]
 pub struct Player;
@@ -18,6 +22,8 @@ struct Jump(bool);
 pub struct Hit(bool);
 
 pub struct HitTime(Instant);
+
+pub struct Hp(pub u8);
 
 const PIXEL_MULTIPLIER: f32 = 3.0;
 
@@ -33,6 +39,7 @@ fn main() {
         .insert_resource(Jump(false))
         .insert_resource(Hit(false))
         .insert_resource(HitTime(Instant::now()))
+        .insert_resource(Hp(20))
         .add_startup_system(init)
         .add_startup_system(spawn_player)
         .add_startup_system(set_window_resolution)
@@ -43,6 +50,8 @@ fn main() {
         .add_system(enemy::enemy_move)
         .add_system(cameraman)
         .add_system(check_hits)
+        .add_startup_system(spawn_hp_meter)
+        .add_system(update_hp_meter)
         .run()
 }
 
@@ -51,7 +60,7 @@ fn init(mut commands: Commands) {
     camera_bundle.orthographic_projection.scale = 1.0 / PIXEL_MULTIPLIER;
     camera_bundle.transform.translation.x = tilemap::TILE_SIZE as f32 * 8.0;
     camera_bundle.transform.translation.y = tilemap::TILE_SIZE as f32 * 11.0;
-    commands.spawn_bundle(camera_bundle);
+    commands.spawn_bundle(camera_bundle).insert(MainCamera);
 }
 
 fn set_window_resolution(mut windows: ResMut<Windows>) {
@@ -220,9 +229,9 @@ fn handle_player_collision(
     }
 }
 
-fn check_hits(hit: ResMut<Hit>, mut hit_time: ResMut<HitTime>) {
+fn check_hits(hit: ResMut<Hit>, mut hit_time: ResMut<HitTime>, mut hp: ResMut<Hp>) {
     if hit.0 && hit_time.0.elapsed().as_millis() > 300 {
-        println!("hit");
+        hp.0 -= 1;
         hit_time.0 = Instant::now();
     }
 }
@@ -230,7 +239,7 @@ fn check_hits(hit: ResMut<Hit>, mut hit_time: ResMut<HitTime>) {
 #[allow(clippy::type_complexity)]
 fn cameraman(
     mut position_queries: QuerySet<(
-        QueryState<&mut Transform, With<Camera>>,
+        QueryState<&mut Transform, With<MainCamera>>,
         QueryState<&Transform, With<Player>>,
     )>,
 ) {
