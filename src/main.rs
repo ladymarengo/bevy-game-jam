@@ -48,7 +48,6 @@ fn main() {
         .add_startup_system(spawn_hud)
         .add_system(update_hp_meter)
         .add_system(update_advantage)
-        .add_startup_system(spawn_stars)
         // .add_system_to_stage(CoreStage::PostUpdate, delete_stars)
         .run()
 }
@@ -243,12 +242,12 @@ fn cameraman(
 #[derive(Component)]
 pub struct Star;
 
-fn spawn_stars(mut commands: Commands) {
+fn spawn_stars(commands: &mut Commands, position: Vec2,) {
     commands
         .spawn_bundle(SpriteBundle {
             transform: Transform {
-                translation: Vec3::new(tilemap::TILE_SIZE as f32 * 20.0,
-                    tilemap::TILE_SIZE as f32 * 32.0,
+                translation: Vec3::new(position.x,
+                    position.y,
                     4.0,),
                 scale: Vec3::new(10.0, 10.0, 0.0),
                 ..Default::default()

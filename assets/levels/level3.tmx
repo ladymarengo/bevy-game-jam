@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.8" tiledversion="1.8.2" orientation="orthogonal" renderorder="right-down" width="200" height="50" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="9">
+<map version="1.8" tiledversion="1.8.2" orientation="orthogonal" renderorder="right-down" width="200" height="50" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="19">
  <tileset firstgid="1" name="terrain" tilewidth="16" tileheight="16" tilecount="48" columns="16">
   <image source="../terrain.png" width="256" height="48"/>
  </tileset>
@@ -119,6 +119,30 @@
   <object id="5" type="anglerfish" x="2468" y="495" width="64" height="64"/>
   <object id="6" type="anglerfish" x="2870.67" y="370.667" width="64" height="64"/>
   <object id="8" type="sawfish" x="2076.66" y="561.663" width="63.3333" height="60.6667"/>
+  <object id="9" type="star" x="485.333" y="261.333">
+   <point/>
+  </object>
+  <object id="11" type="star" x="838" y="261.333">
+   <point/>
+  </object>
+  <object id="13" type="star" x="1338.67" y="264.667">
+   <point/>
+  </object>
+  <object id="14" type="star" x="880" y="470.667">
+   <point/>
+  </object>
+  <object id="15" type="star" x="1530.67" y="661.333">
+   <point/>
+  </object>
+  <object id="16" type="star" x="2392" y="500.667">
+   <point/>
+  </object>
+  <object id="17" type="star" x="2370.67" y="293.333">
+   <point/>
+  </object>
+  <object id="18" type="star" x="2941.33" y="372.667">
+   <point/>
+  </object>
  </objectgroup>
  <layer id="5" name="wall" width="200" height="50" locked="1">
   <data encoding="csv">
