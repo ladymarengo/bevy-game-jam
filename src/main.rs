@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use heron::*;
 use hud::{spawn_hud, update_advantage, update_hp_meter, fade_out_hint};
 use instant::Instant;
+use std::env;
 use std::time::Duration;
 
 mod advantage;
@@ -32,6 +33,19 @@ enum AppState {
     Won,
 }
 
+#[derive(Debug, Clone)]
+enum PlayerCollisionEventType {
+    Started,
+    Stopped,
+}
+
+#[derive(Debug, Clone)]
+struct PlayerCollision {
+    pub player: CollisionData,
+    pub other: CollisionData,
+    pub event_type: PlayerCollisionEventType,
+}
+
 fn main() {
     App::new()
         .add_state(AppState::InGame)
@@ -50,14 +64,17 @@ fn main() {
         .add_startup_system(init)
         .add_startup_system(set_window_resolution)
         .add_startup_system(tilemap::load_initial_map)
-
+        .add_event::<PlayerCollision>()
+        .add_event::<tilemap::ChangeMap>()
         .add_system_set(
             SystemSet::on_update(AppState::InGame)
                 .with_system(player::r#move)
-                .with_system(check_collisions)
+                .with_system(check_collisions.label("collisions"))
                 .with_system(enemy::r#move)
                 .with_system(cameraman)
                 .with_system(check_hits)
+                .with_system(handle_player_collisions.after("collisions"))
+                .with_system(tilemap::handle_change_map.after("collisions")),
         )
         .add_system_set(
             SystemSet::on_enter(AppState::Died)
@@ -93,186 +110,109 @@ fn set_window_resolution(mut windows: ResMut<Windows>) {
 
 fn check_collisions(
     mut events: EventReader<CollisionEvent>,
-    mut jump: ResMut<player::Jump>,
-    mut hit: ResMut<Hit>,
-    player: Query<Entity, With<player::Player>>,
-    enemy: Query<Entity, With<enemy::Enemy>>,
-    mut hit_time: ResMut<HitTime>,
-    stars: Query<Entity, With<Star>>,
-    goals: Query<&goal::Goal>,
-    map: Query<&tilemap::Map>,
-    mut change_map_parameters: (
-        Query<Entity, With<tilemap::Map>>,
-        Res<AssetServer>,
-        ResMut<Assets<TextureAtlas>>,
-        ResMut<Assets<SpriteSheetAnimation>>,
-        ResMut<crate::enemy::Animations>,
-        Query<Entity, With<crate::player::Player>>,
-        Query<Entity, With<crate::enemy::Enemy>>,
-    ),
-    mut commands: Commands,
-    mut hp: ResMut<Hp>,
-    adv: Res<Advantage>,
-    mut app_state: ResMut<State<AppState>>
+    player_entity: Query<Entity, With<player::Player>>,
+    mut player_collision_writer: EventWriter<PlayerCollision>,
 ) {
-    let id = player.single();
+    let id = player_entity.single();
     for event in events.iter() {
         match event {
-            CollisionEvent::Started(player_c, other_c) if player_c.rigid_body_entity() == id => {
-                handle_player_collision(
-                    player_c,
-                    other_c,
-                    &mut jump,
-                    &enemy,
-                    &mut hit,
-                    "started",
-                    &mut hit_time,
-                    &stars,
-                    &goals,
-                    &map,
-                    &mut change_map_parameters,
-                    &mut commands,
-                    &mut hp,
-                    &adv,
-                    &mut app_state,
-                );
+            CollisionEvent::Started(player, other) if player.rigid_body_entity() == id => {
+                player_collision_writer.send(PlayerCollision {
+                    player: player.clone(),
+                    other: other.clone(),
+                    event_type: PlayerCollisionEventType::Started,
+                })
             }
-            CollisionEvent::Started(other_c, player_c) if player_c.rigid_body_entity() == id => {
-                handle_player_collision(
-                    player_c,
-                    other_c,
-                    &mut jump,
-                    &enemy,
-                    &mut hit,
-                    "started",
-                    &mut hit_time,
-                    &stars,
-                    &goals,
-                    &map,
-                    &mut change_map_parameters,
-                    &mut commands,
-                    &mut hp,
-                    &adv,
-                    &mut app_state,
-                );
+            CollisionEvent::Started(other, player) if player.rigid_body_entity() == id => {
+                player_collision_writer.send(PlayerCollision {
+                    player: player.clone(),
+                    other: other.clone(),
+                    event_type: PlayerCollisionEventType::Started,
+                })
             }
-            CollisionEvent::Stopped(player_c, other_c) if player_c.rigid_body_entity() == id => {
-                handle_player_collision(
-                    player_c,
-                    other_c,
-                    &mut jump,
-                    &enemy,
-                    &mut hit,
-                    "stopped",
-                    &mut hit_time,
-                    &stars,
-                    &goals,
-                    &map,
-                    &mut change_map_parameters,
-                    &mut commands,
-                    &mut hp,
-                    &adv,
-                    &mut app_state,
-                );
+            CollisionEvent::Stopped(player, other) if player.rigid_body_entity() == id => {
+                player_collision_writer.send(PlayerCollision {
+                    player: player.clone(),
+                    other: other.clone(),
+                    event_type: PlayerCollisionEventType::Stopped,
+                })
             }
-            CollisionEvent::Stopped(other_c, player_c) if player_c.rigid_body_entity() == id => {
-                handle_player_collision(
-                    player_c,
-                    other_c,
-                    &mut jump,
-                    &enemy,
-                    &mut hit,
-                    "stopped",
-                    &mut hit_time,
-                    &stars,
-                    &goals,
-                    &map,
-                    &mut change_map_parameters,
-                    &mut commands,
-                    &mut hp,
-                    &adv,
-                    &mut app_state,
-                );
+            CollisionEvent::Stopped(other, player) if player.rigid_body_entity() == id => {
+                player_collision_writer.send(PlayerCollision {
+                    player: player.clone(),
+                    other: other.clone(),
+                    event_type: PlayerCollisionEventType::Stopped,
+                })
             }
             _ => (),
         }
     }
 }
 
-fn handle_player_collision(
-    player: &CollisionData,
-    other: &CollisionData,
-    jump: &mut ResMut<player::Jump>,
-    enemy: &Query<Entity, With<enemy::Enemy>>,
-    hit: &mut ResMut<Hit>,
-    state: &str,
-    hit_time: &mut ResMut<HitTime>,
-    stars: &Query<Entity, With<Star>>,
-    goals: &Query<&goal::Goal>,
-    map: &Query<&tilemap::Map>,
-    change_map_parameters: &mut (
-        Query<Entity, With<tilemap::Map>>,
-        Res<AssetServer>,
-        ResMut<Assets<TextureAtlas>>,
-        ResMut<Assets<SpriteSheetAnimation>>,
-        ResMut<crate::enemy::Animations>,
-        Query<Entity, With<crate::player::Player>>,
-        Query<Entity, With<crate::enemy::Enemy>>,
-    ),
-    commands: &mut Commands,
-    hp: &mut ResMut<Hp>,
-    adv: &Res<Advantage>,
-    app_state: &mut ResMut<State<AppState>>
+fn handle_player_collisions(
+    mut commands: Commands,
+    mut app_state: ResMut<State<AppState>>,
+    mut jump: ResMut<player::Jump>,
+    mut hit: ResMut<Hit>,
+    mut hit_time: ResMut<HitTime>,
+    mut hp: ResMut<Hp>,
+    adv: Res<Advantage>,
+    enemy: Query<Entity, With<enemy::Enemy>>,
+    stars: Query<Entity, With<Star>>,
+    goals: Query<&goal::Goal>,
+    map: Query<&tilemap::Map>,
+    mut player_collision_reader: EventReader<PlayerCollision>,
+    mut change_map_writer: EventWriter<tilemap::ChangeMap>,
 ) {
-    if player.normals().iter().any(|normal| normal.y >= 0.9) {
-        jump.0 = 0;
-    }
-
-    let other_entity = other.rigid_body_entity();
-
-    if enemy.get(other_entity).is_ok() {
-        if state == "started" {
-            hit.0 = true;
-            hit_time.0 = Instant::now();
-            // println!("started");
-        } else {
-            hit.0 = false;
-            // println!("stopped");
+    for PlayerCollision {
+        player,
+        other,
+        event_type,
+    } in player_collision_reader.iter()
+    {
+        if player.normals().iter().any(|normal| normal.y >= 0.9) {
+            jump.0 = 0;
         }
-    }
 
-    if stars.get(other_entity).is_ok() {
-        if matches!(
-            adv.as_ref(),
-            Advantage::Player(advantage::PlayerAdvantage::DoubleInitialHp)
-        ) {
-            hp.0 += 2;
-        } else {
-            hp.0 += 1;
-        };
+        let other_entity = other.rigid_body_entity();
+        if enemy.get(other_entity).is_ok() {
+            match event_type {
+                PlayerCollisionEventType::Started => {
+                    hit.0 = true;
+                    hit_time.0 = Instant::now();
+                }
+                PlayerCollisionEventType::Stopped => {
+                    hit.0 = false;
+                }
+            }
+        }
 
-        commands.entity(other_entity).despawn();
-    }
+        if stars.get(other_entity).is_ok() {
+            if matches!(
+                adv.as_ref(),
+                Advantage::Player(advantage::PlayerAdvantage::DoubleInitialHp)
+            ) {
+                hp.0 += 2;
+            } else {
+                hp.0 += 1;
+            };
 
-    if goals.get(other_entity).is_ok() {
-        let map_component = map.single();
-        info!("Goal reached, changing map to {}", map_component.index + 1);
+            commands.entity(other_entity).despawn();
+        }
 
-        app_state.set(AppState::Won).unwrap();
+        if goals.get(other_entity).is_ok() {
+            let map_component = map.single();
+            info!("Goal reached, changing map to {}", map_component.index + 1);
 
-        // TODO: changing map does not work, hangs
-
-        // tilemap::change_map(
-        //     commands,
-        //     &change_map_parameters.0,
-        //     &change_map_parameters.1,
-        //     &mut change_map_parameters.2,
-        //     &mut change_map_parameters.3,
-        //     &mut change_map_parameters.4,
-        //     &change_map_parameters.5,
-        //     &change_map_parameters.6,
-        //     map_component.index + 1,
-        // );
+            if env::var_os("CHANGE_MAP").is_some() {
+                // TODO: changing map does not work, hangs
+                change_map_writer.send(tilemap::ChangeMap {
+                    index: (map_component.index + 1) % tilemap::MAPS_COUNT,
+                })
+            } else {
+                app_state.set(AppState::Won).unwrap();
+            }
+        }
     }
 }
 

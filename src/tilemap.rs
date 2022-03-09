@@ -6,8 +6,11 @@ use rand::Rng;
 pub const TILE_SIZE: usize = 16;
 
 const TILESET_ASSET: &str = "terrain.png";
-static TILEMAPS_TMX: &[&[u8]] = &[include_bytes!("../assets/levels/level3.tmx"), include_bytes!("../assets/levels/level2.tmx")];
-
+static TILEMAPS_TMX: &[&[u8]] = &[
+    include_bytes!("../assets/levels/level3.tmx"),
+    include_bytes!("../assets/levels/level2.tmx"),
+];
+pub const MAPS_COUNT: usize = 2;
 
 const COLLISION_LAYER_NAME: &str = "collision";
 const OBJ_TYPE_PLAYER_START: &str = "player_start";
@@ -50,6 +53,10 @@ impl CollisionTiles {
 pub struct Map {
     pub width: usize,
     pub height: usize,
+    pub index: usize,
+}
+
+pub struct ChangeMap {
     pub index: usize,
 }
 
@@ -106,26 +113,28 @@ pub fn load_initial_map(
     );
 }
 
-pub fn change_map(
-    commands: &mut Commands,
-    map_query: &Query<Entity, With<Map>>,
-    asset_server: &Res<AssetServer>,
-    texture_atlases: &mut ResMut<Assets<TextureAtlas>>,
-    animations: &mut ResMut<Assets<SpriteSheetAnimation>>,
-    animation_handles: &mut ResMut<crate::enemy::Animations>,
-    player_query: &Query<Entity, With<crate::player::Player>>,
-    enemy_query: &Query<Entity, With<crate::enemy::Enemy>>,
-    index: usize,
+pub fn handle_change_map(
+    mut commands: Commands,
+    map_query: Query<Entity, With<Map>>,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut animations: ResMut<Assets<SpriteSheetAnimation>>,
+    mut animation_handles: ResMut<crate::enemy::Animations>,
+    player_query: Query<Entity, With<crate::player::Player>>,
+    enemy_query: Query<Entity, With<crate::enemy::Enemy>>,
+    mut change_map_reader: EventReader<ChangeMap>,
 ) {
-    clear_map(commands, map_query, player_query, enemy_query);
-    load_map(
-        commands,
-        asset_server,
-        texture_atlases,
-        animations,
-        animation_handles,
-        index,
-    );
+    for event in change_map_reader.iter() {
+        clear_map(&mut commands, &map_query, &player_query, &enemy_query);
+        load_map(
+            &mut commands,
+            &asset_server,
+            &mut texture_atlases,
+            &mut animations,
+            &mut animation_handles,
+            event.index,
+        );
+    }
 }
 
 fn load_map(
