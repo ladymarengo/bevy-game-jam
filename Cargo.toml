@@ -2,6 +2,7 @@
 name = "bevy-game-jam"
 version = "0.1.0"
 edition = "2021"
+license = "Apache-2.0"
 
 [dependencies]
 bevy = { version = "0.6.1", default_features = false, features = ["bevy_gilrs", "bevy_winit", "render", "png", "x11", "filesystem_watcher"] }
