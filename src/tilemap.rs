@@ -18,6 +18,7 @@ const OBJ_TYPE_ANGLERFISH: &str = "anglerfish";
 const OBJ_TYPE_SAWFISH: &str = "sawfish";
 const OBJ_TYPE_STAR: &str = "star";
 const OBJ_TYPE_GOAL: &str = "goal";
+const OBJ_TYPE_BUBBLE_GENERATOR: &str = "bubble_generator";
 
 const TILESET_WIDTH: usize = 16;
 const TILESET_HEIGHT: usize = 5;
@@ -248,6 +249,11 @@ fn load_map(
                 } else {
                     panic!("Invalid goal shape, must be rectangle");
                 }
+            } else if object.obj_type == OBJ_TYPE_BUBBLE_GENERATOR {
+                crate::bubble::spawn_bubble_generator(
+                    commands,
+                    position_tmx_to_world(&map, object),
+                );
             }
         }
     }

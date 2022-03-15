@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.8" tiledversion="1.8.2" orientation="orthogonal" renderorder="right-down" width="200" height="50" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="18">
+<map version="1.8" tiledversion="1.8.2" orientation="orthogonal" renderorder="right-down" width="200" height="50" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="36">
  <tileset firstgid="1" name="terrain" tilewidth="16" tileheight="16" tilecount="48" columns="16">
   <image source="../terrain.png" width="256" height="48"/>
  </tileset>
@@ -88,6 +88,23 @@
   </object>
   <object id="16" type="player_start" x="300" y="601" width="32" height="32"/>
   <object id="17" name="goal" type="goal" x="2856" y="240" width="120" height="130"/>
+  <object id="18" type="bubble_generator" x="362" y="670" width="8" height="8"/>
+  <object id="19" type="bubble_generator" x="226" y="636" width="8" height="8"/>
+  <object id="20" type="bubble_generator" x="662" y="588" width="8" height="8"/>
+  <object id="21" type="bubble_generator" x="474" y="667" width="8" height="8"/>
+  <object id="22" type="bubble_generator" x="492" y="668" width="8" height="8"/>
+  <object id="23" type="bubble_generator" x="709" y="425" width="8" height="8"/>
+  <object id="24" type="bubble_generator" x="1156" y="441" width="8" height="8"/>
+  <object id="25" type="bubble_generator" x="1420" y="346" width="8" height="8"/>
+  <object id="26" type="bubble_generator" x="1449" y="635" width="8" height="8"/>
+  <object id="27" type="bubble_generator" x="1783" y="650" width="8" height="8"/>
+  <object id="29" type="bubble_generator" x="2869" y="666" width="8" height="8"/>
+  <object id="30" type="bubble_generator" x="2815" y="665" width="8" height="8"/>
+  <object id="31" type="bubble_generator" x="2884" y="363" width="8" height="8"/>
+  <object id="32" type="bubble_generator" x="2909" y="363" width="8" height="8"/>
+  <object id="33" type="bubble_generator" x="2933" y="363" width="8" height="8"/>
+  <object id="34" type="bubble_generator" x="2958" y="363" width="8" height="8"/>
+  <object id="35" type="bubble_generator" x="2506" y="363" width="8" height="8"/>
  </objectgroup>
  <layer id="1" name="collision" width="200" height="50">
   <data encoding="csv">
