@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.8" tiledversion="1.8.2" orientation="orthogonal" renderorder="right-down" width="200" height="50" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="21">
+<map version="1.8" tiledversion="1.8.2" orientation="orthogonal" renderorder="right-down" width="200" height="50" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="35">
  <tileset firstgid="1" name="terrain" tilewidth="16" tileheight="16" tilecount="48" columns="16">
   <image source="../terrain.png" width="256" height="48"/>
  </tileset>
@@ -145,6 +145,20 @@
   </object>
   <object id="19" x="480" y="888"/>
   <object id="20" name="goal" type="goal" x="2895" y="286" width="83" height="101"/>
+  <object id="21" type="bubble_generator" x="340" y="348" width="8" height="8"/>
+  <object id="22" type="bubble_generator" x="556" y="360" width="8" height="8"/>
+  <object id="23" type="bubble_generator" x="492" y="265" width="8" height="8"/>
+  <object id="24" type="bubble_generator" x="642" y="269" width="8" height="8"/>
+  <object id="25" type="bubble_generator" x="805" y="474" width="8" height="8"/>
+  <object id="26" type="bubble_generator" x="1214" y="634" width="8" height="8"/>
+  <object id="27" type="bubble_generator" x="1286" y="666" width="8" height="8"/>
+  <object id="28" type="bubble_generator" x="1436" y="266" width="8" height="8"/>
+  <object id="29" type="bubble_generator" x="1670" y="633" width="8" height="8"/>
+  <object id="30" type="bubble_generator" x="1704" y="632" width="8" height="8"/>
+  <object id="31" type="bubble_generator" x="2907" y="379" width="8" height="8"/>
+  <object id="32" type="bubble_generator" x="2928" y="379" width="8" height="8"/>
+  <object id="33" type="bubble_generator" x="2945" y="379" width="8" height="8"/>
+  <object id="34" type="bubble_generator" x="2964" y="364" width="8" height="8"/>
  </objectgroup>
  <layer id="5" name="wall" width="200" height="50" locked="1">
   <data encoding="csv">

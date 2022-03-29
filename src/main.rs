@@ -13,6 +13,7 @@ mod goal;
 mod hud;
 mod player;
 mod tilemap;
+mod bubble;
 
 #[derive(Component)]
 struct MainCamera;
@@ -73,6 +74,8 @@ fn main() {
                 .with_system(enemy::r#move)
                 .with_system(cameraman)
                 .with_system(check_hits)
+                .with_system(bubble::process_bubble_generators)
+                .with_system(bubble::process_bubbles)
                 .with_system(handle_player_collisions.after("collisions"))
                 .with_system(tilemap::handle_change_map.after("collisions")),
         )
